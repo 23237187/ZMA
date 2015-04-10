@@ -63,21 +63,21 @@ def truc_gauss(mu, sigma, buttom, top):
     return smp
 
 
-def truc_gauss_vector_upper(length, mu=5, sigma=5.0/3.0, buttom=5, top=10):
+def truc_gauss_vector_upper(length, mu=5, sigma=5.0 / 3.0, buttom=5, top=10):
     vector = list()
     for i in range(length):
         vector.append(truc_gauss(mu, sigma, buttom, top))
     return vector
 
 
-def truc_gauss_vector_lower(length, mu=5, sigma=5.0/3.0, buttom=1, top=4):
+def truc_gauss_vector_lower(length, mu=5, sigma=5.0 / 3.0, buttom=1, top=4):
     vector = list()
     for i in range(length):
         vector.append(truc_gauss(mu, sigma, buttom, top))
     return vector
 
 
-def truc_gauss_vector_median(length, mu=5, sigma=5.0/3.0, buttom=1, top=10):
+def truc_gauss_vector_median(length, mu=5, sigma=5.0 / 3.0, buttom=1, top=10):
     vector = list()
     for i in range(length):
         vector.append(truc_gauss(mu, sigma, buttom, top))
@@ -104,3 +104,72 @@ def fill_frame_for_common_clusters(frame, common_user_app_dict):
             rating_list = truc_gauss_vector_median(len(app_id_list))
             update_user_app_rating(frame, usr_id, app_id_list, rating_list)
     return frame
+
+
+def merge_two_dicts(x, y):
+    z = x.copy()
+    z.update(y)
+    return z
+
+
+def generate_apps_info_for_high_freq_cluster(app_id_list):
+    high_freq_apps_info_dict = dict()
+    for app_id in app_id_list:
+        app_info_dict = {
+            'package_Name': app_id,
+            'day_freq_low_bound': 10,
+            'day_freq_high_bound': 35,
+            'days_prob_low_bound': 0.75,
+            'days_prob_high_bound': 1.00,
+            'avg_time_mu': 30,
+            'avg_time_sigma': 10
+        }
+        high_freq_apps_info_dict.update({app_id: app_info_dict})
+    return high_freq_apps_info_dict
+
+
+def generate_apps_info_for_med_freq_cluster(app_id_list):
+    med_freq_apps_info_dict = dict()
+    for app_id in app_id_list:
+        app_info_dict = {
+            'package_Name': app_id,
+            'day_freq_low_bound': 7,
+            'day_freq_high_bound': 15,
+            'days_prob_low_bound': 0.50,
+            'days_prob_high_bound': 0.75,
+            'avg_time_mu': 30,
+            'avg_time_sigma': 10
+        }
+        med_freq_apps_info_dict.update({app_id: app_info_dict})
+    return med_freq_apps_info_dict
+
+
+def generate_apps_info_for_low_freq_cluster(app_id_list):
+    low_freq_apps_info_dict = dict()
+    for app_id in app_id_list:
+        app_info_dict = {
+            'package_Name': app_id,
+            'day_freq_low_bound': 1,
+            'day_freq_high_bound': 6,
+            'days_prob_low_bound': 0.05,
+            'days_prob_high_bound': 0.25,
+            'avg_time_mu': 5,
+            'avg_time_sigma': 2.5
+        }
+        low_freq_apps_info_dict.update({app_id: app_info_dict})
+    return low_freq_apps_info_dict
+
+
+def generate_app_info_dict(freq_clustered_app_list_dict):
+    app_info_dict = dict()
+    for cluster_name, app_id_list in freq_clustered_app_list_dict.items():
+        if cluster_name == 'high_freq':
+            app_info_dict = merge_two_dicts(app_info_dict,
+                                            generate_apps_info_for_high_freq_cluster(app_id_list))
+        elif cluster_name == 'med_freq':
+            app_info_dict = merge_two_dicts(app_info_dict,
+                                            generate_apps_info_for_med_freq_cluster(app_id_list))
+        else:
+            app_info_dict == merge_two_dicts(app_info_dict,
+                                             generate_apps_info_for_low_freq_cluster(app_id_list))
+    return app_info_dict
