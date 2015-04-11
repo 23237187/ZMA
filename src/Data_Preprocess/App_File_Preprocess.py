@@ -3,7 +3,7 @@ __author__ = 'WinterIsComing'
 import random
 
 import pandas as pd
-# import numpy as np
+import numpy as np, numpy.random
 
 
 def generate_user_set_for_each_meaningful_cluster(sample_probability_dict, total_user_num):
@@ -56,31 +56,38 @@ def user_app_rating_frame_empty(user_list_as_index, app_list_as_col):
     return df
 
 
-def truc_gauss(mu, sigma, buttom, top):
+def truc_gauss_int(mu, sigma, buttom, top):
     smp = int(random.gauss(mu, sigma))
     while not (buttom <= smp <= top):
         smp = int(random.gauss(mu, sigma))
     return smp
 
 
+def truc_gauss(mu, sigma, buttom, top):
+    smp = random.gauss(mu, sigma)
+    while not (buttom <= smp <= top):
+        smp = random.gauss(mu, sigma)
+    return smp
+
+
 def truc_gauss_vector_upper(length, mu=5, sigma=5.0 / 3.0, buttom=5, top=10):
     vector = list()
     for i in range(length):
-        vector.append(truc_gauss(mu, sigma, buttom, top))
+        vector.append(truc_gauss_int(mu, sigma, buttom, top))
     return vector
 
 
 def truc_gauss_vector_lower(length, mu=5, sigma=5.0 / 3.0, buttom=1, top=4):
     vector = list()
     for i in range(length):
-        vector.append(truc_gauss(mu, sigma, buttom, top))
+        vector.append(truc_gauss_int(mu, sigma, buttom, top))
     return vector
 
 
 def truc_gauss_vector_median(length, mu=5, sigma=5.0 / 3.0, buttom=1, top=10):
     vector = list()
     for i in range(length):
-        vector.append(truc_gauss(mu, sigma, buttom, top))
+        vector.append(truc_gauss_int(mu, sigma, buttom, top))
     return vector
 
 
@@ -170,6 +177,79 @@ def generate_app_info_dict(freq_clustered_app_list_dict):
             app_info_dict = merge_two_dicts(app_info_dict,
                                             generate_apps_info_for_med_freq_cluster(app_id_list))
         else:
-            app_info_dict == merge_two_dicts(app_info_dict,
-                                             generate_apps_info_for_low_freq_cluster(app_id_list))
+            app_info_dict = merge_two_dicts(app_info_dict,
+                                            generate_apps_info_for_low_freq_cluster(app_id_list))
     return app_info_dict
+
+
+def user_bahavior_in_specific_day_info(user_id, date, app_dict):
+    user_bahavior_date_dict = {
+        user_id: {
+            date: app_dict
+        }
+    }
+
+
+def app_usage_days_list(app_info_dict, u_app_rating):
+    days_low_bound = int(app_info_dict['days_prob_low_bound'] * 20)
+    days_high_bound = int(app_info_dict['days_prob_high_bound'] * 20)
+    days_num = list(random.sample(range(days_low_bound, days_high_bound + 1), 1))[0]
+
+    avg_time_mu = app_info_dict['avg_time_mu']
+    avg_time_sigma = app_info_dict['avg_time_sigma']
+    avg_time = avg_time_mu + (u_app_rating - 5) * avg_time_sigma
+    # avg_time = truc_gauss(avg_time_mu, avg_time_sigma, 0, 120)
+    total_time = avg_time * days_num
+
+    day_freq_low_bound = app_info_dict['day_freq_low_bound']
+    day_freq_high_bound = app_info_dict['day_freq_high_bound']
+    assert isinstance(days_num, int)
+    freq_in_day_list = list(random.sample(range(day_freq_low_bound, day_freq_high_bound + 1), 
+                                          days_num))
+
+    date_list = list(random.sample(range(5, 26), days_num))
+    time_distribution_on_date_list = numpy.random.dirichlet(np.ones(days_num), size=1) * total_time
+    time_distribution_on_date_list = time_distribution_on_date_list.tolist()
+    return date_list, time_distribution_on_date_list, freq_in_day_list
+
+
+def user_apps_dates_time_freq_dict(app_info_dicts, u_app_frame, user_id):
+    user_apps_vector = u_app_frame.ix[user_id, :]  # pandas Series
+    nonzero_app_id_list = list(user_apps_vector.index[user_apps_vector.nonzero()[0]])
+    date_apps_dict = dict()
+    date_freq_dict = dict()
+    date_time_dict = dict()
+    for app_id in nonzero_app_id_list:
+        rating = user_apps_vector[app_id]
+        date_list, time_distribution_list, freq_in_day_list = app_usage_days_list(app_info_dicts[app_id],
+                                                                                  rating)
+        date_freq_dict = dict(zip(date_list, freq_in_day_list))
+        date_time_dict = dict(zip(date_list, time_distribution_list))
+
+        ones = np.ones(len(date_list), dtype=int).tolist()
+        date_1_hot_series = pd.Series(dict(zip(date_list, ones)))
+
+        date_apps_dict.update({app_id: date_1_hot_series})
+        date_freq_dict.update({app_id: date_freq_dict})
+        date_time_dict.update({app_id: date_time_dict})
+
+        # user_apps_dict.update({app_id, time_dict})
+
+    # user_apps_dict = {user_id: user_apps_dict}
+    # df = pd.DataFrame(date_apps_dict)
+    user_date_app = {user_id: date_apps_dict}
+    user_date_freq = {user_id: date_freq_dict}
+    user_date_time = {user_id: date_time_dict}
+    return user_date_app, user_date_freq, user_date_time
+
+
+# def user_app_usage_freq_and_total_time_dict(app_info_dicts, u_app_frame, user_id, app_id):
+# app_info_dict = app_info_dicts[app_id]
+# days_list, days_num = app_usage_days_list(app_info_dict, u_app_frame, user_id, app_id)
+#     total_time = app_usage_total_time(app_info_dict, u_app_frame, user_id, app_id)
+#     app_usage_dict = {app_id: app_usage_dict}
+#     user_app_dict = {user_id: app_usage_dict}
+#     return user_app_dict
+
+
+# def split_app_daily_usage_time_in_a_mounth(app_info_dict, u_i_frame, user_id):

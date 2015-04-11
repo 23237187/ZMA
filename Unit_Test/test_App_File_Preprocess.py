@@ -1,5 +1,6 @@
 
 from App_File_Preprocess import  *
+import pprint
 
 cluster_prob_dict = {
     'Media': 1.0 / 2.0,
@@ -39,26 +40,30 @@ freq_clusered_app_list_dict = {
 }
 
 app_info_dict = generate_app_info_dict(freq_clusered_app_list_dict)
-print(app_info_dict)
+pprint.pprint(app_info_dict, width=1)
+# print(app_info_dict)
 
-# subsets_dict = generate_user_set_for_each_meaningful_cluster(cluster_prob_dict, 30)
+subsets_dict = generate_user_set_for_each_meaningful_cluster(cluster_prob_dict, 30)
 #
 # # print(subsets_dict)
 #
-# clusters_2_users_2_apps = clusters_2_users_2_apps_map_as_dict(cluster_2_app_dict,subsets_dict)
+clusters_2_users_2_apps = clusters_2_users_2_apps_map_as_dict(cluster_2_app_dict,subsets_dict)
 # # print(clusters_2_users_2_apps)
 #
-# common_clusters_2_users_2_apps = common_clusters_2_users_2_apps_map_as_dict(common_2_app_dict)
+common_clusters_2_users_2_apps = common_clusters_2_users_2_apps_map_as_dict(common_2_app_dict)
 # # print(common_clusters_2_users_2_apps)
 #
-# users_list = list(range(1,31))
-# apps_list = list(range(1,35))
+users_list = list(range(1,31))
+apps_list = list(range(1,35))
 #
-# df = user_app_rating_frame_empty(users_list,apps_list)
+df = user_app_rating_frame_empty(users_list,apps_list)
 #
-# fill_frame_for_meaningful_clusters(df, clusters_2_users_2_apps)
-# fill_frame_for_common_clusters(df,common_clusters_2_users_2_apps)
+fill_frame_for_meaningful_clusters(df, clusters_2_users_2_apps)
+fill_frame_for_common_clusters(df,common_clusters_2_users_2_apps)
 # print(df)
+
+one_hot_date = user_apps_dates_time_freq_dict(app_info_dict, df, 5)
+print(one_hot_date)
 # test_cluster_app_id_lists = [list(range(7)), list(range(7,9)), list(range(9, 13))]
 
 # social_cluster_app_list = test_cluster_app_id_lists[0]
