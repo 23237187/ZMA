@@ -40,7 +40,7 @@ freq_clusered_app_list_dict = {
 }
 
 app_info_dict = generate_app_info_dict(freq_clusered_app_list_dict)
-pprint.pprint(app_info_dict, width=1)
+# pprint.pprint(app_info_dict, width=1)
 # print(app_info_dict)
 
 subsets_dict = generate_user_set_for_each_meaningful_cluster(cluster_prob_dict, 30)
@@ -62,8 +62,11 @@ fill_frame_for_meaningful_clusters(df, clusters_2_users_2_apps)
 fill_frame_for_common_clusters(df,common_clusters_2_users_2_apps)
 # print(df)
 
-one_hot_date = user_apps_dates_time_freq_dict(app_info_dict, df, 5)
-print(one_hot_date)
+user_log_seed_dict = generate_user_log_seed(app_info_dict, df)
+pprint.pprint(user_log_seed_dict, width=1)
+
+# one_hot_date = user_apps_dates_time_freq_dict(app_info_dict, df, 5)
+# print(one_hot_date)
 # test_cluster_app_id_lists = [list(range(7)), list(range(7,9)), list(range(9, 13))]
 
 # social_cluster_app_list = test_cluster_app_id_lists[0]

@@ -5,6 +5,7 @@ import random
 import pandas as pd
 import numpy as np, numpy.random
 
+import pprint
 
 def generate_user_set_for_each_meaningful_cluster(sample_probability_dict, total_user_num):
     total_user_set = set(range(1, total_user_num + 1))
@@ -190,6 +191,8 @@ def user_bahavior_in_specific_day_info(user_id, date, app_dict):
     }
 
 
+
+
 def app_usage_days_list(app_info_dict, u_app_rating):
     days_low_bound = int(app_info_dict['days_prob_low_bound'] * 20)
     days_high_bound = int(app_info_dict['days_prob_high_bound'] * 20)
@@ -199,17 +202,23 @@ def app_usage_days_list(app_info_dict, u_app_rating):
     avg_time_sigma = app_info_dict['avg_time_sigma']
     avg_time = avg_time_mu + (u_app_rating - 5) * avg_time_sigma
     # avg_time = truc_gauss(avg_time_mu, avg_time_sigma, 0, 120)
+    if avg_time <= 0.4:
+        avg_time = 0.5
     total_time = avg_time * days_num
 
     day_freq_low_bound = app_info_dict['day_freq_low_bound']
     day_freq_high_bound = app_info_dict['day_freq_high_bound']
     assert isinstance(days_num, int)
-    freq_in_day_list = list(random.sample(range(day_freq_low_bound, day_freq_high_bound + 1), 
-                                          days_num))
+    freq_in_day_list = list(np.random.choice(np.arange(day_freq_low_bound, day_freq_high_bound + 1),
+                                          size=days_num))
 
     date_list = list(random.sample(range(5, 26), days_num))
-    time_distribution_on_date_list = numpy.random.dirichlet(np.ones(days_num), size=1) * total_time
-    time_distribution_on_date_list = time_distribution_on_date_list.tolist()
+    time_distribution_on_date_list = numpy.random.dirichlet(np.ones(days_num), size=1)[0] * total_time
+    time_distribution_on_date_list = time_distribution_on_date_list
+    if (len(date_list) != len(time_distribution_on_date_list)):
+        print('error')
+        # print("len_date:%d, len_time:%d" % (len(date_list), len(time_distribution_on_date_list)))
+        exit(5)
     return date_list, time_distribution_on_date_list, freq_in_day_list
 
 
@@ -223,15 +232,15 @@ def user_apps_dates_time_freq_dict(app_info_dicts, u_app_frame, user_id):
         rating = user_apps_vector[app_id]
         date_list, time_distribution_list, freq_in_day_list = app_usage_days_list(app_info_dicts[app_id],
                                                                                   rating)
-        date_freq_dict = dict(zip(date_list, freq_in_day_list))
-        date_time_dict = dict(zip(date_list, time_distribution_list))
+        date_freq_dict_tmp = dict(zip(date_list, freq_in_day_list))
+        date_time_dict_tmp = dict(zip(date_list, time_distribution_list))
 
         ones = np.ones(len(date_list), dtype=int).tolist()
-        date_1_hot_series = pd.Series(dict(zip(date_list, ones)))
+        date_1_hot_series = dict(zip(date_list, ones))
 
         date_apps_dict.update({app_id: date_1_hot_series})
-        date_freq_dict.update({app_id: date_freq_dict})
-        date_time_dict.update({app_id: date_time_dict})
+        date_freq_dict.update({app_id: date_freq_dict_tmp})
+        date_time_dict.update({app_id: date_time_dict_tmp})
 
         # user_apps_dict.update({app_id, time_dict})
 
@@ -240,13 +249,64 @@ def user_apps_dates_time_freq_dict(app_info_dicts, u_app_frame, user_id):
     user_date_app = {user_id: date_apps_dict}
     user_date_freq = {user_id: date_freq_dict}
     user_date_time = {user_id: date_time_dict}
-    return user_date_app, user_date_freq, user_date_time
+    uda_bundle_dict = {
+        'user_date_app_dict': user_date_app,
+        'user_date_freq_dict': user_date_freq,
+        'user_date_time_dict': user_date_time
+    }
+    return uda_bundle_dict
+
+
+def user_date_app_bahavior_dict(bundle):
+    # print(list(bundle['user_date_app_dict'].items())[0])
+    user_id, date_apps_dict = list(bundle['user_date_app_dict'].items())[0]
+    date_freq_dict = bundle['user_date_freq_dict'][user_id]
+    # pprint.pprint(date_freq_dict, width=1)
+    date_time_dict = bundle['user_date_time_dict'][user_id]
+
+    df = pd.DataFrame(date_apps_dict).fillna(0)
+    # print(df)
+    dates = df.index.tolist()
+
+    date_behavior_dict = dict()
+    for date in dates:
+        apps = df.columns[df.ix[date].nonzero()].tolist()
+        # print(apps)
+        # print(df.ix[date])
+        # print(df.ix[date].nonzero())
+        apps_behavior_dict = dict()
+        for app_id in apps:
+            # print("%d, %d" % (date, app_id))
+            # pprint.pprint(date_time_dict, width=1)
+            behavior_dict = {
+                'freq': date_freq_dict[app_id][date],
+                'time': date_time_dict[app_id][date]
+            }
+            apps_behavior_dict.update({app_id: behavior_dict})
+        date_behavior_dict.update({date: apps_behavior_dict})
+
+    uid_key_date_behavior_dict = {user_id: date_behavior_dict}
+    return uid_key_date_behavior_dict
+
+
+
+def generate_user_log_seed(app_info_dicts, u_app_frame):
+    log_seed_dict = dict()
+    for user_id in range(1, 31):
+        bundle = user_apps_dates_time_freq_dict(app_info_dicts, u_app_frame, user_id)
+        uid_key_behv_dict = user_date_app_bahavior_dict(bundle)
+        log_seed_dict = merge_two_dicts(log_seed_dict, uid_key_behv_dict)
+    return log_seed_dict
+
+
+
+
 
 
 # def user_app_usage_freq_and_total_time_dict(app_info_dicts, u_app_frame, user_id, app_id):
 # app_info_dict = app_info_dicts[app_id]
 # days_list, days_num = app_usage_days_list(app_info_dict, u_app_frame, user_id, app_id)
-#     total_time = app_usage_total_time(app_info_dict, u_app_frame, user_id, app_id)
+# total_time = app_usage_total_time(app_info_dict, u_app_frame, user_id, app_id)
 #     app_usage_dict = {app_id: app_usage_dict}
 #     user_app_dict = {user_id: app_usage_dict}
 #     return user_app_dict
