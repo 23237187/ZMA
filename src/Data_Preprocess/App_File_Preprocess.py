@@ -1,11 +1,21 @@
 __author__ = 'WinterIsComing'
 
+import os
+import sys
+
 import random
 
 import pandas as pd
 import numpy as np, numpy.random
 
+from datetime import datetime
+from time import mktime
+
+import collections
+
 import pprint
+
+import fileinput
 
 def generate_user_set_for_each_meaningful_cluster(sample_probability_dict, total_user_num):
     total_user_set = set(range(1, total_user_num + 1))
@@ -191,8 +201,6 @@ def user_bahavior_in_specific_day_info(user_id, date, app_dict):
     }
 
 
-
-
 def app_usage_days_list(app_info_dict, u_app_rating):
     days_low_bound = int(app_info_dict['days_prob_low_bound'] * 20)
     days_high_bound = int(app_info_dict['days_prob_high_bound'] * 20)
@@ -210,7 +218,7 @@ def app_usage_days_list(app_info_dict, u_app_rating):
     day_freq_high_bound = app_info_dict['day_freq_high_bound']
     assert isinstance(days_num, int)
     freq_in_day_list = list(np.random.choice(np.arange(day_freq_low_bound, day_freq_high_bound + 1),
-                                          size=days_num))
+                                             size=days_num))
 
     date_list = list(random.sample(range(5, 26), days_num))
     time_distribution_on_date_list = numpy.random.dirichlet(np.ones(days_num), size=1)[0] * total_time
@@ -289,7 +297,6 @@ def user_date_app_bahavior_dict(bundle):
     return uid_key_date_behavior_dict
 
 
-
 def generate_user_log_seed(app_info_dicts, u_app_frame):
     log_seed_dict = dict()
     for user_id in range(1, 31):
@@ -299,17 +306,92 @@ def generate_user_log_seed(app_info_dicts, u_app_frame):
     return log_seed_dict
 
 
+def generate_start_end_timestamps(date, freq, time):
+    time_distribution_list = numpy.random.dirichlet(np.ones(freq), size=1)[0] * time * 60.0
+    start_time = int(mktime(datetime(2015, 3, date, 8, 0).timetuple()))
+    end_time = int(mktime(datetime(2015, 3, date, 23, 59).timetuple()))
+    start_time_list = list(random.sample(range(start_time, end_time), freq))
+    start_end_list = list()
+    for start_point, duration in dict(zip(start_time_list, time_distribution_list)).items():
+        start_point = start_point * 1000 + list(random.sample(range(0, 1000), 1))[0]
+        end_point = start_point + duration * 1000.0
+        start_end_list.append({'start': start_point, 'end': end_point})
+    start_end_list.sort(key=lambda x: x['start'])
+    # start_end_dict_sorted_by_start = collections.OrderedDict(sorted(start_end_dict.items(), key=lambda t:t[0]))
+    return start_end_list
 
 
+def record_dict(user_id, app_id, time_pair):
+    s_dict = {
+        'time': int(time_pair['start']),
+        'latitude': 'null',
+        'altitude': 'null',
+        'IMEI': user_id,
+        'package_name': app_id,
+        'operation_code': 3
+    }
+    e_dict = {
+        'time': int(time_pair['end']),
+        'latitude': 'null',
+        'altitude': 'null',
+        'IMEI': user_id,
+        'package_name': app_id,
+        'operation_code': 4
+    }
+    return s_dict, e_dict
+
+
+def generate_log_file_for_user_date(user_id, date, app_key_behav_dict, path_prefix):
+    app_key_start_end_dict = dict()
+    for app_id, behav_dict in app_key_behav_dict.items():
+        start_end_list = generate_start_end_timestamps(date, behav_dict['freq'], behav_dict['time'])
+        app_key_start_end_dict.update({app_id: start_end_list})
+
+    record_list = list()
+    for app_id, start_end_list in app_key_start_end_dict.items():
+        for time_pair in start_end_list:
+            s_dict, e_dict = record_dict(user_id, app_id, time_pair)
+            record_list.append(s_dict)
+            record_list.append(e_dict)
+    record_frame = pd.DataFrame(record_list)
+
+    record_frame.sort(['time'], inplace=True)
+    record_frame = record_frame.reindex_axis(['time', 'latitude', 'altitude', 'IMEI', 'package_name', 'operation_code'],
+                                             axis=1)
+
+    # print(record_frame)
+    filename = path_prefix + '/3-' + str(date) + '.txt'
+    record_frame.to_csv(filename, header=False, index=False)
+    for line in fileinput.input(filename, inplace=True):
+        print(line.replace(',', '-|-|'), end='')
+
+    # file_name = str(date) + '.txt'
+    # with open(file_name, 'w') as log_file:
+    # for app_id, start_end_list in app_key_start_end_dict.items():
+    # for time_pair in start_end_list:
+    # formated_record(user_id, app_id, time_pair)
+
+
+def generate_log_files_for_user(user_id, date_key_behav_dict, path_prefix):
+    user_folder_path = path_prefix + '/' + str(user_id)
+    os.makedirs(user_folder_path, exist_ok=True)
+    os.chdir(user_folder_path)
+    for date, app_key_behav_dict in date_key_behav_dict.items():
+        generate_log_file_for_user_date(user_id, date, app_key_behav_dict, user_folder_path)
+
+
+def generate_log_files(log_seed_dict, files_path):
+    for user, date_key_behav_dict in log_seed_dict.items():
+        generate_log_files_for_user(user, date_key_behav_dict, files_path)
 
 
 # def user_app_usage_freq_and_total_time_dict(app_info_dicts, u_app_frame, user_id, app_id):
 # app_info_dict = app_info_dicts[app_id]
 # days_list, days_num = app_usage_days_list(app_info_dict, u_app_frame, user_id, app_id)
 # total_time = app_usage_total_time(app_info_dict, u_app_frame, user_id, app_id)
-#     app_usage_dict = {app_id: app_usage_dict}
-#     user_app_dict = {user_id: app_usage_dict}
-#     return user_app_dict
+# app_usage_dict = {app_id: app_usage_dict}
+# user_app_dict = {user_id: app_usage_dict}
+# return user_app_dict
 
 
 # def split_app_daily_usage_time_in_a_mounth(app_info_dict, u_i_frame, user_id):

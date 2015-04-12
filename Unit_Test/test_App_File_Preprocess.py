@@ -63,7 +63,8 @@ fill_frame_for_common_clusters(df,common_clusters_2_users_2_apps)
 # print(df)
 
 user_log_seed_dict = generate_user_log_seed(app_info_dict, df)
-pprint.pprint(user_log_seed_dict, width=1)
+generate_log_files(user_log_seed_dict, 'D:/sample_data')
+# pprint.pprint(user_log_seed_dict, width=1)
 
 # one_hot_date = user_apps_dates_time_freq_dict(app_info_dict, df, 5)
 # print(one_hot_date)
