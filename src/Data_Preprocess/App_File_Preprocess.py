@@ -16,12 +16,34 @@ import collections
 import pprint
 
 import fileinput
+import csv
 
 
 def merge_two_dicts(x, y):
     z = x.copy()
     z.update(y)
     return z
+
+
+def convert_csv_to_recommender_input(input_path, output_path):
+    df = pd.read_csv(input_path + '/ratings.csv')
+    df = df.set_index(df.ix[:, 0])
+    df.index.name = 'usr'
+    df = df.ix[:, 1:]
+    list_of_records = list(df.to_records())
+    elements_list = list()
+    for record in list_of_records:
+        record = list(record)
+        uid = record[0]
+        col = 0
+        for value in record[1:]:
+            col += 1
+            elements_list.append([uid, col, value])
+    with open(output_path + "/ratings_for_als.csv", "a", newline='') as output_csv:
+        csv_writer = csv.writer(output_csv, delimiter='\t')
+        csv_writer.writerows(elements_list)
+
+
 
 
 class AppFilePreprocessor:
