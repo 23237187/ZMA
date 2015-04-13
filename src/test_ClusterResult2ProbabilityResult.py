@@ -1,6 +1,6 @@
 __author__ = 'WinterIsComing'
 
-from src.ClusterResult2ProbabilityResult import *
+from ClusterResult2ProbabilityResult import *
 
 # os.chdir('..')
 #

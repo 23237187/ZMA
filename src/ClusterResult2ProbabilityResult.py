@@ -19,7 +19,7 @@ def cluster_raw_file_2_cluster_csv(cluster_path, output_path):
 
     clusters_dict = dict()
     points_frame = DataFrame()
-    for i in range(3):
+    for i in range(4):
         with open(cluster_path + ('/cluster_%d' % i)) as cluster_file:
             first_line = cluster_file.readline()
             list_raw_cluster_info = first_line.strip().split(':')
@@ -77,7 +77,7 @@ def generate_probability_vector_result(output_path):
     cluster_array = cluster_frame.values
 
     points_frame = pd.read_csv(output_path + '/points.csv', header=None)
-    points_frame = points_frame.drop_duplicates()
+    # points_frame = points_frame.drop_duplicates()
     points_array = points_frame.values
 
     distance_matrix = pw.euclidean_distances(cluster_array, points_array)
