@@ -27,12 +27,11 @@ def merge_two_dicts(x, y):
 class AppFilePreprocessor:
     def __init__(self, special_app_clusters, special_app_clusters_prob,
                  common_app_clusters, app_freq_info,
-                 uid_IMEI, appID_packageName):
+                 appID_packageName):
         self.cluster_appID_dict = special_app_clusters
         self.cluster_prob_dict = special_app_clusters_prob
         self.common_appID_dict = common_app_clusters
         self.freq_appIDs_dict = app_freq_info
-        self.uid_IMEI_dict = uid_IMEI
         self.appID_packageName_dict = appID_packageName
         self.users_list = list(range(1, 31))
         self.apps_list = list(range(1, 35))
@@ -143,6 +142,12 @@ class AppFilePreprocessor:
         app_rating_dict = dict(zip(app_id_list, rating_list))
         for app_id, rating in app_rating_dict.items():
             df.set_value(user_id, app_id, rating)
+        if df.ix[user_id, 13] < 1.0:
+            qq_rating = random.sample(range(4, 7), 1)[0]
+            df.set_value(user_id, 13, qq_rating)
+        if df.ix[user_id, 14] < 1.0:
+            wx_rating = random.sample(range(4, 7), 1)[0]
+            df.set_value(user_id, 14, wx_rating)
 
 
     def fill_frame_for_meaningful_clusters(self):
@@ -354,9 +359,9 @@ class AppFilePreprocessor:
         return start_end_list
 
 
-    def map_uid_2_imei(self, uid):
-        imei = self.uid_IMEI_dict[uid]
-        return imei
+    # def map_uid_2_imei(self, uid):
+    #     imei = self.uid_IMEI_dict[uid]
+    #     return imei
 
 
     def map_appid_2_packageName(self, appID):
@@ -369,7 +374,7 @@ class AppFilePreprocessor:
             'time': int(time_pair['start']),
             'latitude': 'null',
             'altitude': 'null',
-            'IMEI': self.map_uid_2_imei(user_id),
+            'IMEI': user_id,
             'package_name': self.map_appid_2_packageName(app_id),
             'operation_code': 3
         }
@@ -377,7 +382,7 @@ class AppFilePreprocessor:
             'time': int(time_pair['end']),
             'latitude': 'null',
             'altitude': 'null',
-            'IMEI': self.map_uid_2_imei(user_id),
+            'IMEI': user_id,
             'package_name': self.map_appid_2_packageName(app_id),
             'operation_code': 4
         }
@@ -420,6 +425,8 @@ class AppFilePreprocessor:
 
     def generate_log_files(self, files_path):
         log_seed_dict = self.log_seed_dict
+        os.makedirs(files_path, exist_ok=True)
+        self.user_app_rating_frame.to_csv(files_path + '/ratings.csv')
         for user, date_key_behav_dict in log_seed_dict.items():
             self.generate_log_files_for_user(user, date_key_behav_dict, files_path)
 
