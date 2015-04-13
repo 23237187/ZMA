@@ -39,32 +39,47 @@ freq_clusered_app_list_dict = {
     'low_freq': [6, 9, 10, 11, 12, 26, 27, 28, 29, 30, 31, 32, 33, 34]
 }
 
-app_info_dict = generate_app_info_dict(freq_clusered_app_list_dict)
-# pprint.pprint(app_info_dict, width=1)
-# print(app_info_dict)
+appid_packageName_dict = {
+    1: 'tv.danmaku.bili',
+    2: 'com.netease.cloudmusic',
+    3: 'com.youku.phone',
+    4: 'com.chaozh.iReaderFree',
+    5: 'air.tv.douyu.android',
+    6: '',
+    7: 'com.zhihu.android',
+    8: 'com.sina.weibo',
+    9: 'com.baidu.BaiduMap',
+    10: 'com.dianping.v1',
+    11: 'com.sankuai.meituan',
+    12: ''
+}
 
-subsets_dict = generate_user_set_for_each_meaningful_cluster(cluster_prob_dict, 30)
+# app_info_dict = generate_app_info_dict(freq_clusered_app_list_dict)
+# # pprint.pprint(app_info_dict, width=1)
+# # print(app_info_dict)
 #
-# # print(subsets_dict)
+# subsets_dict = generate_user_set_for_each_meaningful_cluster(cluster_prob_dict, 30)
+# #
+# # # print(subsets_dict)
+# #
+# clusters_2_users_2_apps = clusters_2_users_2_apps_map_as_dict(cluster_2_app_dict,subsets_dict)
+# # # print(clusters_2_users_2_apps)
+# #
+# common_clusters_2_users_2_apps = common_clusters_2_users_2_apps_map_as_dict(common_2_app_dict)
+# # # print(common_clusters_2_users_2_apps)
+# #
+# users_list = list(range(1,31))
+# apps_list = list(range(1,35))
+# #
+# df = user_app_rating_frame_empty(users_list,apps_list)
+# #
+# fill_frame_for_meaningful_clusters(df, clusters_2_users_2_apps)
+# fill_frame_for_common_clusters(df,common_clusters_2_users_2_apps)
+# # print(df)
 #
-clusters_2_users_2_apps = clusters_2_users_2_apps_map_as_dict(cluster_2_app_dict,subsets_dict)
-# # print(clusters_2_users_2_apps)
-#
-common_clusters_2_users_2_apps = common_clusters_2_users_2_apps_map_as_dict(common_2_app_dict)
-# # print(common_clusters_2_users_2_apps)
-#
-users_list = list(range(1,31))
-apps_list = list(range(1,35))
-#
-df = user_app_rating_frame_empty(users_list,apps_list)
-#
-fill_frame_for_meaningful_clusters(df, clusters_2_users_2_apps)
-fill_frame_for_common_clusters(df,common_clusters_2_users_2_apps)
-# print(df)
-
-user_log_seed_dict = generate_user_log_seed(app_info_dict, df)
-generate_log_files(user_log_seed_dict, 'D:/sample_data')
-# pprint.pprint(user_log_seed_dict, width=1)
+# user_log_seed_dict = generate_user_log_seed(app_info_dict, df)
+# generate_log_files(user_log_seed_dict, 'D:/sample_data')
+# # pprint.pprint(user_log_seed_dict, width=1)
 
 # one_hot_date = user_apps_dates_time_freq_dict(app_info_dict, df, 5)
 # print(one_hot_date)
@@ -75,3 +90,7 @@ generate_log_files(user_log_seed_dict, 'D:/sample_data')
 # social_cluster_user_app_dict = map_clustered_apps_to_clustered_users_for_one_cluster(social_cluster_app_list, subsets_list[0])
 #
 # print(social_cluster_user_app_dict)
+
+preprocessor = AppFilePreprocessor(cluster_2_app_dict, cluster_prob_dict, common_2_app_dict,
+                                   freq_clusered_app_list_dict)
+preprocessor.generate_log_files('D:/sample_data')
