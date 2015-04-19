@@ -1,7 +1,6 @@
 __author__ = 'WinterIsComing'
 
 import os
-import re
 import fileinput
 import pandas as pd
 from collections import Counter
