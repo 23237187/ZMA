@@ -5,10 +5,17 @@ import re
 import fileinput
 import pandas as pd
 from collections import Counter
+import shutil
+import glob
+import re
+import csv
 
 class App_Ratings_Generator:
-    def __init__(self, user_records_path):
+    def __init__(self, user_records_path, fpg_output_path, appid_name_map):
         self.usr_records_path = user_records_path
+        self.fpg_output_path = fpg_output_path
+        self.appid_name_dict = appid_name_map
+        self.name_appid_dict = {k: str(v) for k, v in dict(map(reversed, self.appid_name_dict.items())).items()}
         # self.package_name_2_app_id = package_name_2_app_id
         self.usr_list = self.read_usr_list()
         self.user_date_dict = self.user_key_date_list_dict_gen()
@@ -111,7 +118,91 @@ class App_Ratings_Generator:
         return user_app_rating_frame
 
 
+    def appid_name_convert(self, match):
+        return self.name_appid_dict[match.group(0)]
 
+
+    def merge_user_behavior_in_different_days(self, user_id):
+        path_prefix = self.usr_records_path
+        fpg_prefix = self.fpg_output_path
+        user_files_path = path_prefix + '/' + str(user_id)
+        outfilename = fpg_prefix + '/total_behavior_for_user_' + str(user_id) + '.txt'
+        outfilename_tmp = outfilename + '_tmp'
+        regex = re.compile('|'.join(re.escape(x) for x in self.name_appid_dict))
+        if not os.path.exists(os.path.dirname(outfilename)):
+            os.makedirs(os.path.dirname(outfilename))
+        with open(outfilename_tmp, 'wb') as outfile:
+            for filename in glob.glob(user_files_path + '/*.txt'):
+                filename = filename.replace('\\', '/')
+                with open(filename, 'rb') as readfile:
+                    shutil.copyfileobj(readfile, outfile)
+        with open(outfilename_tmp) as fin, open(outfilename, 'w') as fout:
+            for line in fin:
+                fout.write(regex.sub(self.appid_name_convert, line))
+        os.remove(outfilename_tmp)
+
+    def merge_behavir_for_users(self):
+        for usr_id in self.usr_list:
+            self.merge_user_behavior_in_different_days(usr_id)
+
+    def read_uid_behavior_to_frame(self, uid):
+        behavior_file_path = self.fpg_output_path + '/total_behavior_for_user_' + str(uid) + '.txt'
+        for line in fileinput.input(behavior_file_path, inplace=True):
+            print(line.replace('-|-|', ','), end='')
+        df = pd.read_csv(behavior_file_path, header=None)
+        for line in fileinput.input(behavior_file_path, inplace=True):
+            print(line.replace(',', '-|-|'), end='')
+        df.columns = ['time', 'latitude', 'altitude', 'IMEI', 'app_id', 'operation_code']
+        df.sort(['time'], inplace=True)
+        return df
+
+    @staticmethod
+    def unqify_list(list):
+        seen = set()
+        seen_add = seen.add
+        return [x for x in list if not (x in seen or seen_add(x))]
+
+    def timestamp_to_appid(self, df, timestamp):
+        appid = df.loc[df['time'] == timestamp]['app_id'].tolist()[0]
+        return appid
+
+
+    def windowed_app_action_for_uid(self, df):
+        behavior_frame = df
+        behavior_frame = behavior_frame.loc[behavior_frame['operation_code'] == 3]
+        behavior_time_list = behavior_frame['time'].tolist()
+        behavior_time_list.sort()
+        window_start = behavior_time_list[0]
+        window_end = window_start + 30 * 60 * 1000
+        records_list = [[]]
+        for time_stamp in behavior_time_list[1:]:
+            if time_stamp <= window_end:
+                records_list[-1].append(self.timestamp_to_appid(behavior_frame, time_stamp))
+            elif (time_stamp - window_end) <= 3 * 60 * 1000:
+                records_list[-1].append(self.timestamp_to_appid(behavior_frame, time_stamp))
+                window_end = time_stamp
+            else:
+                window_start = time_stamp
+                window_end = window_start + 30 * 60 * 1000
+                records_list[-1] = self.unqify_list(records_list[-1])
+                new_record_list = [self.timestamp_to_appid(behavior_frame, time_stamp)]
+                records_list.append(new_record_list)
+
+        return records_list
+
+    def combine_action_window_records_for_all_users(self):
+        path_prefix = self.fpg_output_path
+        usr_records_list = list()
+
+        for usr in self.usr_list:
+            behavior_frame = self.read_uid_behavior_to_frame(usr)
+            usr_records = self.windowed_app_action_for_uid(behavior_frame)
+            usr_records_list.append(usr_records)
+
+        with open(path_prefix + '/transactions.txt', 'a', newline='') as output_file:
+            csv_writer = csv.writer(output_file, delimiter=' ')
+            for records in usr_records_list:
+                csv_writer.writerows(records)
 
 
 
