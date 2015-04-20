@@ -183,11 +183,14 @@ class App_Ratings_Generator:
             else:
                 window_start = time_stamp
                 window_end = window_start + 30 * 60 * 1000
-                records_list[-1] = self.unqify_list(records_list[-1])
                 new_record_list = [self.timestamp_to_appid(behavior_frame, time_stamp)]
                 records_list.append(new_record_list)
+        records_list_unique = []
+        for record in records_list:
+            unique = self.unqify_list(record)
+            records_list_unique.append(unique)
 
-        return records_list
+        return records_list_unique
 
     def combine_action_window_records_for_all_users(self):
         path_prefix = self.fpg_output_path
@@ -203,6 +206,19 @@ class App_Ratings_Generator:
             for records in usr_records_list:
                 csv_writer.writerows(records)
 
+    def combine_action_window_records_for_specific_user(self, uid):
+        path_prefix = self.fpg_output_path
+        usr_records_list = list()
+
+
+        behavior_frame = self.read_uid_behavior_to_frame(uid)
+        usr_records = self.windowed_app_action_for_uid(behavior_frame)
+        usr_records_list.append(usr_records)
+
+        with open(path_prefix + '/transactions.txt', 'a', newline='') as output_file:
+            csv_writer = csv.writer(output_file, delimiter=' ')
+            for records in usr_records_list:
+                csv_writer.writerows(records)
 
 
 
