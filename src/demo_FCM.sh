@@ -4,7 +4,7 @@ MAHOUT="/app/mahout/bin/mahout"
 
 WORK_DIR=/ZTE_Demo
 
-
+python3 /root/PycharmProjects/ZMA/src/Data_Preprocess/test_FCM.py /ZTE_Demo/sample_data /ZTE_Demo/fpg_data
 
 hadoop fs -mkdir /ZTE_Demo
 hadoop fs -put /ZTE_demo/ratings_for_als.csv ${WORK_DIR}
@@ -18,7 +18,7 @@ mahout fkmeans \
     -i ${WORK_DIR}/als/out/U/part-m-00000 \
     -c ${WORK_DIR}/init_clusters \
     -o ${WORK_DIR}/FCM \
-    -k 4 \
+    -k 3 \
     -dm org.apache.mahout.common.distance.EuclideanDistanceMeasure \
     -m 2 \
     -ow \

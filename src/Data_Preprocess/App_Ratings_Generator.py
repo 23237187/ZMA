@@ -220,6 +220,37 @@ class App_Ratings_Generator:
             for records in usr_records_list:
                 csv_writer.writerows(records)
 
+    def write_ratings_to_file(self):
+        frame = self.user_app_rating_frame
+        columns = frame.columns
+        name_dict = self.name_appid_dict
+        new_columns = []
+        for column in columns:
+            new_columns.append(name_dict[column])
+        frame.columns = new_columns
+        frame.to_csv(self.usr_records_path + '/ratings.csv', )
+
+    def convert_csv_to_recommender_input(self):
+        df = pd.read_csv(self.usr_records_path + '/ratings.csv')
+        df = df.set_index(df.ix[:, 0])
+        df.index.name = 'usr'
+        df = df.ix[:, 1:]
+        list_of_records = list(df.to_records())
+        elements_list = list()
+        for record in list_of_records:
+            record = list(record)
+            uid = record[0]
+            col = 0
+            for value in record[1:]:
+                col += 1
+                elements_list.append([uid, col, value])
+        with open(self.usr_records_path + "/ratings_for_als.csv", "a", newline='') as output_csv:
+            csv_writer = csv.writer(output_csv, delimiter='\t')
+            csv_writer.writerows(elements_list)
+
+
+
+
 
 
 

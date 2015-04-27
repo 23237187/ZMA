@@ -19,7 +19,7 @@ def cluster_raw_file_2_cluster_csv(cluster_path, output_path):
 
     clusters_dict = dict()
     points_frame = DataFrame()
-    for i in range(4):
+    for i in range(3):
         with open(cluster_path + ('/cluster_%d' % i)) as cluster_file:
             first_line = cluster_file.readline()
             list_raw_cluster_info = first_line.strip().split(':')
@@ -97,8 +97,8 @@ def split_parse_generate(input_path, output_path):
 
 
 
-if __name__ == "__main__":
-    print(sys.argv)
-    input_path = sys.argv[1]
-    output_path = sys.argv[2]
-    split_cluster_file(input_path, output_path)
+# if __name__ == "__main__":
+#     print(sys.argv)
+#     input_path = sys.argv[1]
+#     output_path = sys.argv[2]
+#     split_cluster_file(input_path, output_path)

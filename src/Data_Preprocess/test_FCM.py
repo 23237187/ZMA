@@ -1,6 +1,7 @@
 __author__ = 'WinterIsComing'
 
 from App_Ratings_Generator import *
+import sys
 import pprint
 
 appid_packageName_dict = {
@@ -40,10 +41,10 @@ appid_packageName_dict = {
     34: 'com.immomo.momo'
 }
 
-
-rating_generator =  App_Ratings_Generator('/ZTE_Demo/sample_data', '/ZTE_Demo/fpg_data', appid_packageName_dict)
-rating_generator.write_ratings_to_file()
-rating_generator.convert_csv_to_recommender_input()
+if __name__ == "__main__":
+    rating_generator =  App_Ratings_Generator(sys.argv[1], sys.argv[2], appid_packageName_dict)
+    rating_generator.write_ratings_to_file()
+    rating_generator.convert_csv_to_recommender_input()
 # rating_generator.combine_action_window_records_for_all_users()
 # rating_generator.merge_behavir_for_users()
 # df = rating_generator.read_uid_behavior_to_frame(1)
