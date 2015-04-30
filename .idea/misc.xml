@@ -20,9 +20,9 @@
   <component name="ProjectModuleManager">
     <modules />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.4.2 (/usr/bin/python3.4)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.4.0 (/usr/bin/python3.4)" project-jdk-type="Python SDK" />
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Python_pratice_01" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Python_pratice_01" />
   </component>
   <component name="RunManager">
     <list size="0" />

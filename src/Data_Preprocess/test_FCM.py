@@ -42,7 +42,7 @@ appid_packageName_dict = {
 }
 
 if __name__ == "__main__":
-    rating_generator =  App_Ratings_Generator(sys.argv[1], sys.argv[2], appid_packageName_dict)
+    rating_generator = App_Ratings_Generator(sys.argv[1], sys.argv[2], appid_packageName_dict)
     rating_generator.write_ratings_to_file()
     rating_generator.convert_csv_to_recommender_input()
 # rating_generator.combine_action_window_records_for_all_users()
