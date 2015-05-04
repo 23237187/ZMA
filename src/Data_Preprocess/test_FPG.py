@@ -1,6 +1,8 @@
 __author__ = 'root'
 
 from App_Ratings_Generator import *
+from Results_Merge_Util import *
+from FPG_Processor import *
 import sys
 
 appid_packageName_dict = {
@@ -42,6 +44,13 @@ appid_packageName_dict = {
 
 
 if __name__ == "__main__":
-    rating_generator = App_Ratings_Generator(sys.argv[1], sys.argv[2], appid_packageName_dict)
-    rating_generator.merge_behavir_for_users()
-    rating_generator.combine_action_window_records_for_specific_user(1)
+    if sys.argv[3] == "tran_gen":
+        rating_generator = App_Ratings_Generator(sys.argv[1], sys.argv[2], appid_packageName_dict)
+        rating_generator.merge_behavir_for_users()
+        rating_generator.combine_action_window_records_for_all_users()
+    elif sys.argv[3] == "rule_gen":
+        Results_Merge_Util.fpg_result_merge("/ZTE_Demo/FPG_result")
+        fpg = FPG_Processor("/ZTE_Demo/FPG_result/result.txt", "/ZTE_Demo/FPG_result/fpg_result.txt")
+        fpg.run_generate_rule()
+
+

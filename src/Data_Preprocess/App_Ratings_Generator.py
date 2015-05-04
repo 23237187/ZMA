@@ -248,6 +248,51 @@ class App_Ratings_Generator:
             csv_writer = csv.writer(output_csv, delimiter='\t')
             csv_writer.writerows(elements_list)
 
+    @staticmethod
+    def generateRules(L, supportData, minConf=0.0001):
+        bigRuleList = list()
+        for i in range(1, len((L))):
+            for freqSet in L[i]:
+                H1 =[frozenset(item) for item in freqSet]
+                if (i > 1):
+                    rulesFromConseq(freqSet, H1, supportData, bigRuleList, minConf)
+                else:
+                    calcConf(freqSet, H1, supportData, bigRuleList, minConf)
+
+    @staticmethod
+    def calcConf(freqSet, H, supportData, brl, minConf=0.0001):
+        prunedH = list()
+        for conseq in H:
+            conf = supportData[freqSet] / supportData[freqSet - conseq]
+            if conf >= minConf:
+                print(freqSet-conseq, '-->', conseq)
+                brl.append((freqSet - conseq, conseq, conf))
+                prunedH.append(conseq)
+        return prunedH
+
+    @staticmethod
+    def rulesFromConseq(freqSet, H, supportData, brl, minconf=0.0001):
+        m = len(H[0])
+        if (len(freqSet) > (m + 1)):
+            Hmpl = aprioriGen(H, m + 1)
+            Hmpl = calcConf(freqSet, Hmpl, supportData, brl, minconf)
+            if (len(Hmpl) > 1):
+                rulesFromConseq(freqSet, Hmpl, supportData, brl, minconf)
+
+    @staticmethod
+    def aprioriGen(Lk, k):
+        retList = list()
+        lenLk = len(Lk)
+        for i in range(lenLk):
+            for j in range(i+1, lenLk):
+                L1 = list(Lk[i])[:k-2]
+                L2 = list(Lk[j])[:k-2]
+                L1.sort()
+                L2.sort()
+                if L1 == L2:
+                    retList.append(Lk[i] | Lk[j])
+        return retList
+
 
 
 

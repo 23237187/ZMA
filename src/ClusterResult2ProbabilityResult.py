@@ -56,7 +56,7 @@ def cluster_raw_file_2_cluster_csv(cluster_path, output_path):
     # print(df)
 
 def split_cluster_file(raw_cluster_file_path, pattern_string=r'{.*}'):
-    print(raw_cluster_file_path)
+    # print(raw_cluster_file_path)
     r = re.compile(pattern_string)
     with open(raw_cluster_file_path + '/cluster555') as raw_cluster_file:
         i = 0
@@ -68,7 +68,7 @@ def split_cluster_file(raw_cluster_file_path, pattern_string=r'{.*}'):
                     for item in list(g):
                         print(item, file=cluster_file_head)
                     i = i + 1
-        print(i)
+        # print(i)
 
 def generate_probability_vector_result(output_path):
 
