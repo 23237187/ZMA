@@ -16,6 +16,8 @@ hadoop fs -put /ZTE_Demo/fpg_data /ZTE_Demo/fpg_data/transactions.txt
 
 hadoop fs -get ${WORK_DIR}/FPG_result ${WORK_DIR}/FPG_result
 
+hadoop fs -rmr ${WORK_DIR}
+
 python3 /root/ZMA_Stage_1/src/Data_Preprocess/test_FPG.py /ZTE_Demo/sample_data /ZTE_Demo/fpg_data rule_gen
 
 echo "FPG Complete"
