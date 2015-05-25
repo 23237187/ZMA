@@ -2,6 +2,8 @@ __author__ = 'root'
 
 import ast
 import fileinput
+import pandas as pd
+import seaborn as sns
 
 class FPG_Processor:
     def __init__(self, freqSetFile, outFile, trans_num=14279.0):
@@ -44,7 +46,7 @@ class FPG_Processor:
 
 
 
-    def generateRules(self, L, supportData, outfile, minConf=0.0001):
+    def generateRules(self, L, supportData, outfile, minConf=0.1):
         bigRuleList = list()
         for i in range(1, len((L))):
             for freqSet in L[i]:
@@ -62,7 +64,7 @@ class FPG_Processor:
             if supportData[freqSet - conseq] == 1.0:
                 continue
             if conf >= minConf:
-                print(freqSet-conseq, '-->', conseq, file=outfile)
+                print(freqSet-conseq, '-->', conseq, ' conf:', conf, file=outfile)
                 brl.append((freqSet - conseq, conseq, conf))
                 prunedH.append(conseq)
         return prunedH
@@ -94,4 +96,26 @@ class FPG_Processor:
             print(line.replace("frozenset(", ""), end='')
         for line in fileinput.input(self.output_path, inplace=True):
             print(line.replace(")", ""), end='')
+
+    def fpg_result_demo_process(self):
+        df = pd.read_csv(self.output_path, header=None, sep='conf:')
+        df.columns = ['rule', 'conf']
+        conf_series = df.conf
+        df = pd.DataFrame(df.rule.str.split('-->', 1).tolist(), columns=['left', 'right'])
+        df['conf'] = conf_series
+        print(df.shape)
+        df = df.sort(['conf'], ascending=False)
+        df_high = df[0:21]
+        df_med = df[2193:2214]
+        df_low = df[4386:4407]
+        sub_df = pd.concat([df_high, df_med, df_low])
+        # print(sub_df)
+        sub_df = sub_df.pivot(index='left', columns='right')
+        sub_df.fillna(0, inplace=True)
+        print(sub_df)
+        print(type(sub_df.columns))
+        sns.set()
+        sns.heatmap(sub_df)
+        sns.plt.show()
+
 

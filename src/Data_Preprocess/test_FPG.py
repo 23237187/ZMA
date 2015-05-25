@@ -42,15 +42,20 @@ appid_packageName_dict = {
     34: 'com.immomo.momo'
 }
 
+# for linux demo run
+# if __name__ == "__main__":
+#     if sys.argv[3] == "tran_gen":
+#         rating_generator = App_Ratings_Generator(sys.argv[1], sys.argv[2], appid_packageName_dict)
+#         rating_generator.merge_behavir_for_users()
+#         rating_generator.combine_action_window_records_for_all_users()
+#     elif sys.argv[3] == "rule_gen":
+#         Results_Merge_Util.fpg_result_merge("/ZTE_Demo/FPG_result")
+#         fpg = FPG_Processor("/ZTE_Demo/FPG_result/result.txt", "/ZTE_Demo/FPG_result/fpg_result.txt")
+#         fpg.run_generate_rule()
 
-if __name__ == "__main__":
-    if sys.argv[3] == "tran_gen":
-        rating_generator = App_Ratings_Generator(sys.argv[1], sys.argv[2], appid_packageName_dict)
-        rating_generator.merge_behavir_for_users()
-        rating_generator.combine_action_window_records_for_all_users()
-    elif sys.argv[3] == "rule_gen":
-        Results_Merge_Util.fpg_result_merge("/ZTE_Demo/FPG_result")
-        fpg = FPG_Processor("/ZTE_Demo/FPG_result/result.txt", "/ZTE_Demo/FPG_result/fpg_result.txt")
-        fpg.run_generate_rule()
+# for test
+fpg = FPG_Processor(r"D:\ZTE_Demo\FPG_result\result.txt", r"D:\ZTE_Demo\FPG_result\fpg_result_dev.txt")
+# fpg.run_generate_rule()
+fpg.fpg_result_demo_process()
 
 
