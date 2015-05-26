@@ -1,9 +1,12 @@
 __author__ = 'root'
 
 import pandas as pd
+import numpy as np
 import ast
 import glob
 import fileinput
+import pprint
+import seaborn as sns
 
 
 class Results_Merge_Util:
@@ -50,6 +53,67 @@ class Results_Merge_Util:
             print(line.replace(")", ""), end='')
         for line in fileinput.input(file_path + "/result.txt", inplace=True):
             print(line.replace("(", ""), end='')
+
+    @staticmethod
+    def ratings_csv_rearange(file_path):
+        df = pd.read_csv(file_path)
+        df = df.set_index(df.ix[:, 0])
+        df.index.name = 'usr'
+        df = df.ix[:, 1:]
+        df = df[[str(i) for i in list(range(1, 35))]]
+        # print(df)
+        return df
+
+    @staticmethod
+    def recs_to_df(file_path):
+        for line in fileinput.input(file_path, inplace=True):
+            if fileinput.isfirstline():
+               line = line.replace("1\t", "{1\t")
+            print(line, end='')
+        for line in fileinput.input(file_path, inplace=True):
+            print(line.replace("[", ":{"), end='')
+        for line in fileinput.input(file_path, inplace=True):
+            print(line.replace("]", "},"), end='')
+        with open(file_path, 'a') as file:
+            file.write("}")
+        with open(file_path) as file:
+            content = file.read()
+            recs_dict = ast.literal_eval(content)
+        df = pd.DataFrame.from_dict(recs_dict).fillna(0)
+        df = df.T
+        df.index.name = 'usr'
+        df.columns = [str(i) for i in df.columns]
+        # print(df)
+        return df
+
+    @staticmethod
+    def merge_ratings_and_recs(ratings_path, recs_path):
+        ratings = Results_Merge_Util.ratings_csv_rearange(ratings_path)
+        recs = Results_Merge_Util.recs_to_df(recs_path)
+        df = ratings.add(recs, fill_value=0)
+        df = df[[str(i) for i in list(range(1, 35))]]
+        return df
+
+    @staticmethod
+    def recommendation_result_demo_process(ratings_path, recs_path):
+        fill_df = Results_Merge_Util.merge_ratings_and_recs(ratings_path, recs_path)
+        sns.set()
+        sns.heatmap(fill_df)
+        sns.plt.show()
+
+
+
+        #     print(line.replace("[", ":{"), end='')
+        # for line in fileinput.input(file_path, inplace=True):
+        #     print(line.replace("]", "},"), end='')
+        # for line in fileinput.input(file_path, inplace=True):
+        #     print(line.replace("\t", ":"), end='')
+
+        # with open(file_path) as recs_file:
+        #     line = recs_file.readline()
+        #     first_line_list = line.split()
+        # print(first_line_list)
+
 
 
 
