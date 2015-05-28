@@ -18,6 +18,7 @@ import sklearn.metrics.pairwise as pw
 def cluster_raw_file_2_cluster_csv(cluster_path, output_path):
 
     clusters_dict = dict()
+    radius_dict = dict()
     points_frame = DataFrame()
     for i in range(3):
         with open(cluster_path + ('/cluster_%d' % i)) as cluster_file:
@@ -28,11 +29,14 @@ def cluster_raw_file_2_cluster_csv(cluster_path, output_path):
             cluster_centroid_coordinates = ast.literal_eval(cluster_centroid_coordinates)
             cluster_points_num = list_raw_cluster_info[3].strip().split(",")[0]
             cluster_identifier = list_raw_cluster_info[4].strip('}').strip("\"")
+            cluster_radius = list_raw_cluster_info[1].strip().split("\"")[0].strip(',')
+            cluster_radius = ast.literal_eval(cluster_radius)
             # print("====================================================================")
             # print(cluster_centroid_coordinates)
             # print(cluster_points_num)
             # print(cluster_identifier)
             clusters_dict.update({cluster_identifier: cluster_centroid_coordinates})
+            radius_dict.update({cluster_identifier: cluster_radius})
             cluster_file.readline()
             # cluster_file.readline()
             # list_tmp = cluster_file.readline().strip().split(':')
@@ -51,6 +55,8 @@ def cluster_raw_file_2_cluster_csv(cluster_path, output_path):
     # print(clusters_dict)
     df = DataFrame.from_dict(clusters_dict, orient='index')
     df.to_csv(output_path + '/clusters.csv', header=None)
+    df = DataFrame.from_dict(radius_dict, orient='index')
+    df.to_csv(output_path + '/radius.csv', header=None)
     # print(df)
     # df = pd.read_csv('points.csv', header=None)
     # print(df)

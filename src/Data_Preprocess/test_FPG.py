@@ -54,7 +54,7 @@ appid_packageName_dict = {
 #         fpg.run_generate_rule()
 
 # for test
-fpg = FPG_Processor(r"D:\ZTE_Demo\FPG_result\result.txt", r"D:\ZTE_Demo\FPG_result\fpg_result_dev.txt")
+fpg = FPG_Processor("/RESULT/FPG_result/result.txt", "/RESULT/FPG_result/fpg_result.txt")
 # fpg.run_generate_rule()
 fpg.fpg_result_demo_process()
 

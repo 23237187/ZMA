@@ -249,25 +249,25 @@ class App_Ratings_Generator:
             csv_writer = csv.writer(output_csv, delimiter='\t')
             csv_writer.writerows(elements_list)
 
-    @staticmethod
-    def convert_csv_to_recommender_input(path):
-        df = pd.read_csv(path + '/ratings.csv')
-        df = df.set_index(df.ix[:, 0])
-        df.index.name = 'usr'
-        df = df.ix[:, 1:]
-        df = df[[str(i) for i in list(range(1, 35))]]
-        list_of_records = list(df.to_records())
-        elements_list = list()
-        for record in list_of_records:
-            record = list(record)
-            uid = record[0]
-            col = 0
-            for value in record[1:]:
-                col += 1
-                elements_list.append([uid, col, value])
-        with open(path + "/ratings_for_als.csv", "a", newline='') as output_csv:
-            csv_writer = csv.writer(output_csv, delimiter='\t')
-            csv_writer.writerows(elements_list)
+    # @staticmethod
+    # def convert_csv_to_recommender_input(path):
+    #     df = pd.read_csv(path + '/ratings.csv')
+    #     df = df.set_index(df.ix[:, 0])
+    #     df.index.name = 'usr'
+    #     df = df.ix[:, 1:]
+    #     df = df[[str(i) for i in list(range(1, 35))]]
+    #     list_of_records = list(df.to_records())
+    #     elements_list = list()
+    #     for record in list_of_records:
+    #         record = list(record)
+    #         uid = record[0]
+    #         col = 0
+    #         for value in record[1:]:
+    #             col += 1
+    #             elements_list.append([uid, col, value])
+    #     with open(path + "/ratings_for_als.csv", "a", newline='') as output_csv:
+    #         csv_writer = csv.writer(output_csv, delimiter='\t')
+    #         csv_writer.writerows(elements_list)
 
 
 

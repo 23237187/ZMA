@@ -101,6 +101,13 @@ class Results_Merge_Util:
         sns.heatmap(fill_df)
         sns.plt.show()
 
+    @staticmethod
+    def ratings_demo_process(ratings_path):
+        df = Results_Merge_Util.ratings_csv_rearange(ratings_path)
+        sns.set()
+        sns.heatmap(df)
+        sns.plt.show()
+
 
 
         #     print(line.replace("[", ":{"), end='')

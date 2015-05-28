@@ -16,6 +16,8 @@ class Data_Visulizor:
         self.centroids_df = self.read_cluster_centroids_and_radius()
         self.points_and_prob_df = self.read_cluster_points_and_probability()
 
+
+
     def read_cluster_centroids_and_radius(self):
         centoids_df = pd.read_csv(self.cluster_centroids_path, header=None)
         centoids_df.columns = ["clusterID", "F1", "F2", "F3"]
@@ -88,13 +90,13 @@ class Data_Visulizor:
         y_range = [0.92, 1.3, 1.1]
         p.oval(x=self.centroids_df.ix[:, 'F1'].tolist(),
                y=self.centroids_df.ix[:, 'F2'].tolist(),
-               # width=np.array(self.centroids_df.ix[:, 'RF1'].tolist()) * 2,
-               # height=np.array(self.centroids_df.ix[:, 'RF2'].tolist()) * 2,
+               width=np.array(self.centroids_df.ix[:, 'RF1'].tolist()) * 4,
+               height=np.array(self.centroids_df.ix[:, 'RF2'].tolist()) * 4,
                # width=np.array(max_distance),
                # height=np.array(max_distance),
-               width=np.array(x_range) * 2 / 0.75,
-               height=np.array(y_range) * 2 / 0.75,
-               fill_color=["#FF0000", "#00FF00", "#0000FF"],
+               # width=np.array(x_range) * 2 / 0.75,
+               # height=np.array(y_range) * 2 / 0.75,
+               fill_color=["#0000FF", "#00FF00", "#FF0000"],
                fill_alpha=0.3,
                line_color="#000000",
                line_width=1)
@@ -103,7 +105,7 @@ class Data_Visulizor:
         df = self.points_and_prob_df
         X = np.array(df['F1'].tolist())
         Y = np.array(df['F2'].tolist())
-        radii = [0.02] * 30
+        radii = [0.005] * 30
         colors = ["#%02x%02x%02x" % (r, g, b)
                   for r, g, b in
                   zip(np.floor(np.array(df['SV-0'].tolist()) * 255),
@@ -126,13 +128,13 @@ class Data_Visulizor:
         y_range = [1.7, 1.3, 1.1]
         p.oval(x=self.centroids_df.ix[:, 'F2'].tolist(),
                y=self.centroids_df.ix[:, 'F3'].tolist(),
-               # width=np.array(self.centroids_df.ix[:, 'RF2'].tolist()) * 2 /0.75,
-               # height=np.array(self.centroids_df.ix[:, 'RF3'].tolist()) * 2 /0.75,
+               width=np.array(self.centroids_df.ix[:, 'RF2'].tolist()) * 4,
+               height=np.array(self.centroids_df.ix[:, 'RF3'].tolist()) * 4,
                # width=np.array(max_distance),
                # height=np.array(max_distance),
-               width=np.array(x_range) * 2 / 0.75,
-               height=np.array(y_range) * 2 / 0.75,
-               fill_color=["#FF0000", "#00FF00", "#0000FF"],
+               # width=np.array(x_range) * 2 / 0.75,
+               # height=np.array(y_range) * 2 / 0.75,
+               fill_color=["#0000FF", "#00FF00", "#FF0000"],
                fill_alpha=0.3,
                line_color="#000000",
                line_width=1)
@@ -141,7 +143,7 @@ class Data_Visulizor:
         df = self.points_and_prob_df
         X = np.array(df['F2'].tolist())
         Y = np.array(df['F3'].tolist())
-        radii = [0.03] * 30
+        radii = [0.02] * 30
         colors = ["#%02x%02x%02x" % (r, g, b)
                   for r, g, b in
                   zip(np.floor(np.array(df['SV-0'].tolist()) * 255),
@@ -164,13 +166,13 @@ class Data_Visulizor:
         y_range = [1.7, 1.3, 1.1]
         p.oval(x=self.centroids_df.ix[:, 'F1'].tolist(),
                y=self.centroids_df.ix[:, 'F3'].tolist(),
-               # width=np.array(self.centroids_df.ix[:, 'RF2'].tolist()) * 2 /0.75,
-               # height=np.array(self.centroids_df.ix[:, 'RF3'].tolist()) * 2 /0.75,
+               width=np.array(self.centroids_df.ix[:, 'RF2'].tolist()) * 2 /0.75,
+               height=np.array(self.centroids_df.ix[:, 'RF3'].tolist()) * 2 /0.75,
                # width=np.array(max_distance),
                # height=np.array(max_distance),
-               width=np.array(x_range) * 2 / 0.75,
-               height=np.array(y_range) * 2 / 0.75,
-               fill_color=["#FF0000", "#00FF00", "#0000FF"],
+               # width=np.array(x_range) * 2 / 0.75,
+               # height=np.array(y_range) * 2 / 0.75,
+               fill_color=["#0000FF", "#00FF00", "#FF0000"],
                fill_alpha=0.3,
                line_color="#000000",
                line_width=1)
@@ -179,7 +181,7 @@ class Data_Visulizor:
         df = self.points_and_prob_df
         X = np.array(df['F1'].tolist())
         Y = np.array(df['F3'].tolist())
-        radii = [0.02] * 30
+        radii = [0.01] * 30
         colors = ["#%02x%02x%02x" % (r, g, b)
                   for r, g, b in
                   zip(np.floor(np.array(df['SV-0'].tolist()) * 255),
