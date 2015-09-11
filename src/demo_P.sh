@@ -24,7 +24,7 @@ mahout  recommendfactorized  \
         --maxRating 10
 
 #$MAHOUT seqdumper -i /ZTE_Demo/als/out/userRatings/part-r-00000 -o /ZTE_Demo/ratings
-hadoop fs -get /ZTE_Demo/als/rmse/rmse.txt /ZTE_Demo/rmse.txt
+#hadoop fs -get /ZTE_Demo/als/rmse/rmse.txt /ZTE_Demo/rmse.txt
 hadoop fs -get /ZTE_Demo/als/rec/part-m-00000 /ZTE_Demo/rec
 
 

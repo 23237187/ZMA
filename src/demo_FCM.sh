@@ -49,7 +49,7 @@ mahout fkmeans \
     -c ${WORK_DIR}/KMS/clusters-1-final \
     -o ${WORK_DIR}/FCM \
     -dm org.apache.mahout.common.distance.EuclideanDistanceMeasure \
-    -m 2 \
+    -m 1.1 \
     -ow \
     -cd 0.005 \
     -x 50 \
