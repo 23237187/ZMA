@@ -43,9 +43,6 @@ def convert_csv_to_recommender_input(input_path, output_path):
         csv_writer = csv.writer(output_csv, delimiter='\t')
         csv_writer.writerows(elements_list)
 
-
-
-
 class AppFilePreprocessor:
     def __init__(self, special_app_clusters, special_app_clusters_prob,
                  common_app_clusters, app_freq_info,
