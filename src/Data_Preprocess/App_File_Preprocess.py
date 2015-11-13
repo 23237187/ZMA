@@ -15,6 +15,8 @@ import collections
 
 import pprint
 
+import json
+
 import fileinput
 import csv
 
@@ -46,7 +48,8 @@ def convert_csv_to_recommender_input(input_path, output_path):
 class AppFilePreprocessor:
     def __init__(self, special_app_clusters, special_app_clusters_prob,
                  common_app_clusters, app_freq_info,
-                 appID_packageName):
+                 appID_packageName, seed=False, seed_path=''):
+
         self.cluster_appID_dict = special_app_clusters
         self.cluster_prob_dict = special_app_clusters_prob
         self.common_appID_dict = common_app_clusters
@@ -54,15 +57,36 @@ class AppFilePreprocessor:
         self.appID_packageName_dict = appID_packageName
         self.users_list = list(range(1, 31))
         self.apps_list = list(range(1, 35))
-        self.user_subset_for_specail_cluster_dict = self.generate_user_set_for_each_meaningful_cluster()
-        self.special_clusters_users_apps_dict = self.clusters_2_users_2_apps_map_as_dict()
-        self.common_cluster_users_apps_dict = self.common_clusters_2_users_2_apps_map_as_dict()
+        self.seed = seed
+
+        if self.seed == False :
+            self.user_subset_for_specail_cluster_dict = self.generate_user_set_for_each_meaningful_cluster()
+            self.special_clusters_users_apps_dict = self.clusters_2_users_2_apps_map_as_dict()
+            self.common_cluster_users_apps_dict = self.common_clusters_2_users_2_apps_map_as_dict()
+        else:
+            self.seed_path = seed_path
+            self.special_clusters_users_apps_dict = self.load_spec_cluster_dist_file()
+            self.common_cluster_users_apps_dict = self.load_common_cluster_dist_file()
         self.user_app_rating_frame = self.user_app_rating_frame_empty()
         self.user_app_rating_frame = self.fill_frame_for_meaningful_clusters()
         self.user_app_rating_frame = self.fill_frame_for_common_clusters()
         self.app_info_dict = self.generate_app_info_dict()
         self.log_seed_dict = self.generate_user_log_seed()
 
+
+    def load_spec_cluster_dist_file(self, suffix='/cluster_dist_spec.txt'):
+        spec_dict = dict()
+        with open(self.seed_path + suffix, 'r') as spec_file:
+            spec_dict = json.load(spec_file)
+            # pprint.pprint(spec_dict, width=1)
+        return spec_dict
+
+    def load_common_cluster_dist_file(self, suffix='/cluster_dist_common.txt'):
+        common_dict = dict()
+        with open(self.seed_path + suffix, 'r') as common_file:
+            common_dict = json.load(common_file)
+            # pprint.pprint(common_dict, width=1)
+        return common_dict
 
     def generate_user_set_for_each_meaningful_cluster(self, total_user_num=30):
         total_user_set = set(range(1, total_user_num + 1))
@@ -75,7 +99,7 @@ class AppFilePreprocessor:
 
     @staticmethod
     def map_clustered_apps_to_clustered_users_for_one_cluster(app_id_list, user_id_list,
-                                                              map_prob_lower_bound=0.5, map_prob_upper_bound=1.0):
+                                                              map_prob_lower_bound=0.0, map_prob_upper_bound=1.0):
         app_num = len(app_id_list)
         min_num = int(app_num * map_prob_lower_bound)
         max_num = int(app_num * map_prob_upper_bound)
@@ -107,7 +131,7 @@ class AppFilePreprocessor:
         for cluster_name, app_list in clusters_2_app_dict.items():
             user_list = range(1, 31)
             user_app_dict = self.map_clustered_apps_to_clustered_users_for_one_cluster(app_list, user_list,
-                                                                                       map_prob_lower_bound=0.0)
+                                                                                       map_prob_lower_bound=0.5)
             common_clusters_2_users_apps_map.update({cluster_name: user_app_dict})
 
         return common_clusters_2_users_apps_map
@@ -161,6 +185,7 @@ class AppFilePreprocessor:
         app_rating_dict = dict(zip(app_id_list, rating_list))
         for app_id, rating in app_rating_dict.items():
             df.set_value(user_id, app_id, rating)
+        print(df)
         if df.ix[user_id, 13] < 1.0:
             qq_rating = random.sample(range(4, 7), 1)[0]
             df.set_value(user_id, 13, qq_rating)
@@ -172,22 +197,37 @@ class AppFilePreprocessor:
     def fill_frame_for_meaningful_clusters(self):
         frame = self.user_app_rating_frame
         cluster_user_app_dict = self.special_clusters_users_apps_dict
-        for cluster_name, user_app_dict in cluster_user_app_dict.items():
-            for usr_id, app_id_list in user_app_dict.items():
-                rating_list = self.truc_gauss_vector_upper(len(app_id_list))
-                self.update_user_app_rating(frame, usr_id, app_id_list, rating_list)
-        return frame
+        if self.seed == False:
+            for cluster_name, user_app_dict in cluster_user_app_dict.items():
+                for usr_id, app_id_list in user_app_dict.items():
+                    rating_list = self.truc_gauss_vector_upper(len(app_id_list))
+                    self.update_user_app_rating(frame, usr_id, app_id_list, rating_list)
+            return frame
+        else:
+            for cluster_name, user_app_dict in cluster_user_app_dict.items():
+                for usr_id, app_id_list in user_app_dict.items():
+                    usr_id = int(usr_id)
+                    rating_list = self.truc_gauss_vector_upper(len(app_id_list))
+                    self.update_user_app_rating(frame, usr_id, app_id_list, rating_list)
+            return frame
 
 
     def fill_frame_for_common_clusters(self):
         frame = self.user_app_rating_frame
         common_user_app_dict = self.common_cluster_users_apps_dict
-        for cluster_name, user_app_dict in common_user_app_dict.items():
-            for usr_id, app_id_list in user_app_dict.items():
-                rating_list = self.truc_gauss_vector_median(len(app_id_list))
-                self.update_user_app_rating(frame, usr_id, app_id_list, rating_list)
-        return frame
-
+        if self.seed == False:
+            for cluster_name, user_app_dict in common_user_app_dict.items():
+                for usr_id, app_id_list in user_app_dict.items():
+                    rating_list = self.truc_gauss_vector_median(len(app_id_list))
+                    self.update_user_app_rating(frame, usr_id, app_id_list, rating_list)
+            return frame
+        else:
+            for cluster_name, user_app_dict in common_user_app_dict.items():
+                for usr_id, app_id_list in user_app_dict.items():
+                    usr_id = int(usr_id)
+                    rating_list = self.truc_gauss_vector_median(len(app_id_list))
+                    self.update_user_app_rating(frame, usr_id, app_id_list, rating_list)
+            return frame
 
     @staticmethod
     def generate_apps_info_for_high_freq_cluster(app_id_list):
@@ -446,6 +486,10 @@ class AppFilePreprocessor:
         log_seed_dict = self.log_seed_dict
         os.makedirs(files_path, exist_ok=True)
         self.user_app_rating_frame.to_csv(files_path + '/ratings.csv')
+        with open(files_path + '/cluster_dist_spec.txt', 'w') as spec_file:
+            json.dump(self.special_clusters_users_apps_dict, spec_file)
+        with open(files_path + '/cluster_dist_common.txt', 'w') as common_file:
+            json.dump(self.common_cluster_users_apps_dict, common_file)
         for user, date_key_behav_dict in log_seed_dict.items():
             self.generate_log_files_for_user(user, date_key_behav_dict, files_path)
 

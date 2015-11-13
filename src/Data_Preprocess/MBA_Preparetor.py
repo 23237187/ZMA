@@ -63,7 +63,7 @@ class MBA_Preparetor:
         print(first_line[1:], end='')
         json_fileinput.close()
         for line in fileinput.input(output_path, inplace=True):
-            line = re.sub(r"}.", "}\n", line)
+            line = re.sub("\"}.", "Z\"}\n", line)
             line = line.replace("\"latitude\":\"null\",\"altitude\":\"null\"", "\"properties\":{\"latitude\":\"null\",\"altitude\":\"null\"}")
             print(line, end='')
 

@@ -1,5 +1,6 @@
 
-from App_File_Preprocess import  *
+
+from src.Data_Preprocess.App_File_Preprocess import  *
 import pprint
 
 cluster_prob_dict = {
@@ -73,14 +74,20 @@ appid_packageName_dict = {
     29: 'com.sand.airdroid',
     30: 'com.tencent.news',
     31: 'qsbk.app',
-    32: 'com.coolapl.market',
+    32: 'com.coolapk.market',
     33: 'com.buestc.wallet',
     34: 'com.immomo.momo'
 }
 
 
 # preprocessor = AppFilePreprocessor(cluster_2_app_dict, cluster_prob_dict, common_2_app_dict,
-#                                    freq_clusered_app_list_dict, appid_packageName_dict)
-# preprocessor.generate_log_files('D:/sample_data')
+#                                     freq_clusered_app_list_dict, appid_packageName_dict)
+# preprocessor.generate_log_files('/home/yang/sample_2')
 
-convert_csv_to_recommender_input('D:/sample_data', 'D:/sample_data')
+preprocessor = AppFilePreprocessor(cluster_2_app_dict, cluster_prob_dict, common_2_app_dict,
+                                    freq_clusered_app_list_dict, appid_packageName_dict,
+                                    seed=True,
+                                    seed_path='/home/yang/sample_2')
+preprocessor.generate_log_files('/home/yang/sample_3')
+
+# convert_csv_to_recommender_input('D:/sample_data', 'D:/sample_data')
