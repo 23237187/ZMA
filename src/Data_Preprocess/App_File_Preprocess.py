@@ -20,6 +20,7 @@ import json
 import fileinput
 import csv
 import ast
+import pickle
 
 
 def merge_two_dicts(x, y):
@@ -51,7 +52,8 @@ class AppFilePreprocessor:
                  common_app_clusters, app_freq_info,
                  appID_packageName,
                  seed=False, seed_path='',
-                 rec_list=False, rec_path=''):
+                 rec_list=False, rec_path='',
+                 mons=1):
 
         self.cluster_appID_dict = special_app_clusters
         self.cluster_prob_dict = special_app_clusters_prob
@@ -59,13 +61,14 @@ class AppFilePreprocessor:
         self.freq_appIDs_dict = app_freq_info
         self.appID_packageName_dict = appID_packageName
         self.packageName_appID_dict = self.invert_appID_packageName_dict()
-        pprint.pprint(self.packageName_appID_dict)
+        # pprint.pprint(self.packageName_appID_dict)
         self.users_list = list(range(1, 31))
         self.apps_list = list(range(1, 35))
         self.seed = seed
         self.seed_path = seed_path
         self.rec_list = rec_list
         self.rec_path = rec_path
+        self.mons = mons
 
         if self.seed == False :
             self.user_subset_for_specail_cluster_dict = self.generate_user_set_for_each_meaningful_cluster()
@@ -80,7 +83,7 @@ class AppFilePreprocessor:
         if self.rec_list == True:
             self.merge_recList_2_rating_frame()
         self.app_info_dict = self.generate_app_info_dict()
-        self.log_seed_dict = self.generate_user_log_seed()
+        self.mon_log_seed_list = self.generate_mons_log_seed()
 
 
     def load_spec_cluster_dist_file(self, suffix='/cluster_dist_spec.txt'):
@@ -344,9 +347,10 @@ class AppFilePreprocessor:
         return app_info_dict
 
 
-    def app_usage_days_list(self, app_info_dict, u_app_rating):
-        days_low_bound = int(app_info_dict['days_prob_low_bound'] * 20)
-        days_high_bound = int(app_info_dict['days_prob_high_bound'] * 20)
+    def app_usage_days_list(self, app_info_dict, u_app_rating, sample_days_list):
+        days_how_many = len(sample_days_list)
+        days_low_bound = int(app_info_dict['days_prob_low_bound'] * days_how_many)#change needed
+        days_high_bound = int(app_info_dict['days_prob_high_bound'] * days_how_many)#change needed
         days_num = list(random.sample(range(days_low_bound, days_high_bound + 1), 1))[0]
 
         avg_time_mu = app_info_dict['avg_time_mu']
@@ -362,10 +366,9 @@ class AppFilePreprocessor:
         assert isinstance(days_num, int)
         freq_in_day_list = list(np.random.choice(np.arange(day_freq_low_bound, day_freq_high_bound + 1),
                                                  size=days_num))
-
-        date_list = list(random.sample(range(5, 26), days_num))
+        date_list = list(random.sample(sample_days_list, days_num))
+        #change needed
         time_distribution_on_date_list = numpy.random.dirichlet(np.ones(days_num), size=1)[0] * total_time
-        time_distribution_on_date_list = time_distribution_on_date_list
         if (len(date_list) != len(time_distribution_on_date_list)):
             print('error')
             # print("len_date:%d, len_time:%d" % (len(date_list), len(time_distribution_on_date_list)))
@@ -373,7 +376,7 @@ class AppFilePreprocessor:
         return date_list, time_distribution_on_date_list, freq_in_day_list
 
 
-    def user_apps_dates_time_freq_dict(self, user_id):
+    def user_apps_dates_time_freq_dict(self, user_id, sample_days_list):
         app_info_dicts = self.app_info_dict
         u_app_frame = self.user_app_rating_frame
         user_apps_vector = u_app_frame.ix[user_id, :]  # pandas Series
@@ -384,7 +387,8 @@ class AppFilePreprocessor:
         for app_id in nonzero_app_id_list:
             rating = user_apps_vector[app_id]
             date_list, time_distribution_list, freq_in_day_list = self.app_usage_days_list(app_info_dicts[app_id],
-                                                                                           rating)
+                                                                                           rating,
+                                                                                           sample_days_list)
             date_freq_dict_tmp = dict(zip(date_list, freq_in_day_list))
             date_time_dict_tmp = dict(zip(date_list, time_distribution_list))
 
@@ -442,10 +446,24 @@ class AppFilePreprocessor:
         return uid_key_date_behavior_dict
 
 
-    def generate_user_log_seed(self):
+    def generate_mons_log_seed(self):
+        month_num = self.mons
+        monthNo_log_seed_list = list()
+        for cnt in range(1, month_num + 1):
+            month_idx = cnt + 2
+            if (cnt == 1):
+                sample_day_num = 20
+            else:
+                sample_day_num = list(random.sample(range(15, 21), 1))[0]
+            sample_days_list = list(random.sample(range(1, 30), sample_day_num))
+            log_seed_dict = self.generate_user_log_seed(sample_days_list)
+            monthNo_log_seed_list.append((month_idx, log_seed_dict))
+        return monthNo_log_seed_list
+
+    def generate_user_log_seed(self, sample_days_list):
         log_seed_dict = dict()
         for user_id in range(1, 31):
-            bundle = self.user_apps_dates_time_freq_dict(user_id)
+            bundle = self.user_apps_dates_time_freq_dict(user_id, sample_days_list)
             uid_key_behv_dict = self.user_date_app_bahavior_dict(bundle)
             log_seed_dict = merge_two_dicts(log_seed_dict, uid_key_behv_dict)
         return log_seed_dict
@@ -454,7 +472,9 @@ class AppFilePreprocessor:
     def generate_start_end_timestamps(self, date, freq, time):
         time_distribution_list = numpy.random.dirichlet(np.ones(freq), size=1)[0] * time * 60.0
         start_time = int(mktime(datetime(2015, 3, date, 8, 0).timetuple()))
+        #change needed
         end_time = int(mktime(datetime(2015, 3, date, 23, 59).timetuple()))
+        #change needed
         start_time_list = list(random.sample(range(start_time, end_time), freq))
         start_end_list = list()
         for start_point, duration in dict(zip(start_time_list, time_distribution_list)).items():
@@ -496,7 +516,7 @@ class AppFilePreprocessor:
         return s_dict, e_dict
 
 
-    def generate_log_file_for_user_date(self, user_id, date, app_key_behav_dict, path_prefix):
+    def generate_log_file_for_user_date(self, user_id, mon_idx, date, app_key_behav_dict, path_prefix):
         app_key_start_end_dict = dict()
         for app_id, behav_dict in app_key_behav_dict.items():
             start_end_list = self.generate_start_end_timestamps(date, behav_dict['freq'], behav_dict['time'])
@@ -516,29 +536,33 @@ class AppFilePreprocessor:
             axis=1)
 
         # print(record_frame)
-        filename = path_prefix + '/3-' + str(date) + '.txt'
+        month_str = str(mon_idx)
+        filename = path_prefix + '/' + month_str + '-' + str(date) + '.txt'
         record_frame.to_csv(filename, header=False, index=False)
         for line in fileinput.input(filename, inplace=True):
             print(line.replace(',', '-|-|'), end='')
 
 
-    def generate_log_files_for_user(self, user_id, date_key_behav_dict, path_prefix):
+    def generate_log_files_for_user(self, user_id, mon_idx, date_key_behav_dict, path_prefix):
         user_folder_path = path_prefix + '/' + str(user_id)
         os.makedirs(user_folder_path, exist_ok=True)
         os.chdir(user_folder_path)
         for date, app_key_behav_dict in date_key_behav_dict.items():
-            self.generate_log_file_for_user_date(user_id, date, app_key_behav_dict, user_folder_path)
+            self.generate_log_file_for_user_date(user_id, mon_idx, date, app_key_behav_dict, user_folder_path)
 
 
     def generate_log_files(self, files_path):
-        log_seed_dict = self.log_seed_dict
+        mon_log_seed_list = self.mon_log_seed_list
         os.makedirs(files_path, exist_ok=True)
         self.user_app_rating_frame.to_csv(files_path + '/ratings.csv')
         with open(files_path + '/cluster_dist_spec.txt', 'w') as spec_file:
             json.dump(self.special_clusters_users_apps_dict, spec_file)
         with open(files_path + '/cluster_dist_common.txt', 'w') as common_file:
             json.dump(self.common_cluster_users_apps_dict, common_file)
-        for user, date_key_behav_dict in log_seed_dict.items():
-            self.generate_log_files_for_user(user, date_key_behav_dict, files_path)
+        with open(files_path + '/mon_log_seed.txt', 'wb') as seed_file:
+            pickle.dump(self.mon_log_seed_list, seed_file)
+        for mon_idx, log_seed_dict in mon_log_seed_list:
+            for user, date_key_behav_dict in log_seed_dict.items():
+                self.generate_log_files_for_user(user, mon_idx, date_key_behav_dict, files_path)
 
 
