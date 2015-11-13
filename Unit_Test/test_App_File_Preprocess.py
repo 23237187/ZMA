@@ -84,10 +84,18 @@ appid_packageName_dict = {
 #                                     freq_clusered_app_list_dict, appid_packageName_dict)
 # preprocessor.generate_log_files('/home/yang/sample_2')
 
+# preprocessor = AppFilePreprocessor(cluster_2_app_dict, cluster_prob_dict, common_2_app_dict,
+#                                     freq_clusered_app_list_dict, appid_packageName_dict,
+#                                     seed=True,
+#                                     seed_path='/home/yang/sample_2')
+# preprocessor.generate_log_files('/home/yang/sample_3')
+
 preprocessor = AppFilePreprocessor(cluster_2_app_dict, cluster_prob_dict, common_2_app_dict,
                                     freq_clusered_app_list_dict, appid_packageName_dict,
                                     seed=True,
-                                    seed_path='/home/yang/sample_2')
+                                    seed_path='/home/yang/sample_2',
+                                    rec_list=True,
+                                    rec_path='/ZTE_Demo/miracle_rec_list/part-00000')
 preprocessor.generate_log_files('/home/yang/sample_3')
 
 # convert_csv_to_recommender_input('D:/sample_data', 'D:/sample_data')

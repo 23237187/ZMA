@@ -19,6 +19,7 @@ import json
 
 import fileinput
 import csv
+import ast
 
 
 def merge_two_dicts(x, y):
@@ -48,28 +49,36 @@ def convert_csv_to_recommender_input(input_path, output_path):
 class AppFilePreprocessor:
     def __init__(self, special_app_clusters, special_app_clusters_prob,
                  common_app_clusters, app_freq_info,
-                 appID_packageName, seed=False, seed_path=''):
+                 appID_packageName,
+                 seed=False, seed_path='',
+                 rec_list=False, rec_path=''):
 
         self.cluster_appID_dict = special_app_clusters
         self.cluster_prob_dict = special_app_clusters_prob
         self.common_appID_dict = common_app_clusters
         self.freq_appIDs_dict = app_freq_info
         self.appID_packageName_dict = appID_packageName
+        self.packageName_appID_dict = self.invert_appID_packageName_dict()
+        pprint.pprint(self.packageName_appID_dict)
         self.users_list = list(range(1, 31))
         self.apps_list = list(range(1, 35))
         self.seed = seed
+        self.seed_path = seed_path
+        self.rec_list = rec_list
+        self.rec_path = rec_path
 
         if self.seed == False :
             self.user_subset_for_specail_cluster_dict = self.generate_user_set_for_each_meaningful_cluster()
             self.special_clusters_users_apps_dict = self.clusters_2_users_2_apps_map_as_dict()
             self.common_cluster_users_apps_dict = self.common_clusters_2_users_2_apps_map_as_dict()
         else:
-            self.seed_path = seed_path
             self.special_clusters_users_apps_dict = self.load_spec_cluster_dist_file()
             self.common_cluster_users_apps_dict = self.load_common_cluster_dist_file()
         self.user_app_rating_frame = self.user_app_rating_frame_empty()
         self.user_app_rating_frame = self.fill_frame_for_meaningful_clusters()
         self.user_app_rating_frame = self.fill_frame_for_common_clusters()
+        if self.rec_list == True:
+            self.merge_recList_2_rating_frame()
         self.app_info_dict = self.generate_app_info_dict()
         self.log_seed_dict = self.generate_user_log_seed()
 
@@ -185,7 +194,7 @@ class AppFilePreprocessor:
         app_rating_dict = dict(zip(app_id_list, rating_list))
         for app_id, rating in app_rating_dict.items():
             df.set_value(user_id, app_id, rating)
-        print(df)
+        # print(df)
         if df.ix[user_id, 13] < 1.0:
             qq_rating = random.sample(range(4, 7), 1)[0]
             df.set_value(user_id, 13, qq_rating)
@@ -228,6 +237,45 @@ class AppFilePreprocessor:
                     rating_list = self.truc_gauss_vector_median(len(app_id_list))
                     self.update_user_app_rating(frame, usr_id, app_id_list, rating_list)
             return frame
+
+    def merge_recList_2_rating_frame(self):
+        uid_appid_rating_list = self.read_recommendation_list_file()
+        self.modify_rating_frame_element(self.user_app_rating_frame, uid_appid_rating_list)
+
+    @staticmethod
+    def modify_rating_frame_element(df, uid_appid_rating_list):
+        for uid, appid_rating_list in uid_appid_rating_list:
+            for appid, rating in appid_rating_list:
+                df.set_value(uid, appid, rating)
+
+    def invert_appID_packageName_dict(self):
+        return { v: k for k, v in self.appID_packageName_dict.items()}
+
+
+    def read_recommendation_list_file(self):
+        list_file_path = self.rec_path
+        uid_appid_rating_list = list()
+        with open(list_file_path, 'r') as infile:
+            for line in infile:
+                if line.strip():
+                    data_items = line.split(sep=",(")
+                    item_num = len(data_items)
+                    if (item_num < 1):
+                        continue
+                    uid = ast.literal_eval(data_items[0].replace("(", " ").strip())
+                    appid_rating_list = list()
+                    for ele in data_items[1:]:
+                        ele.strip().strip(')')
+                        ele = ele.replace(")", " ")
+                        ele = ele.replace("(", " ")
+                        dict_ele = ele.split(",")
+                        appID = self.packageName_appID_dict[dict_ele[0]]
+                        rating = int(ast.literal_eval(dict_ele[1].strip())) + 1
+                        appid_rating_list.append((appID, rating))
+                    uid_appid_rating_list.append((uid, appid_rating_list))
+        return uid_appid_rating_list
+
+
 
     @staticmethod
     def generate_apps_info_for_high_freq_cluster(app_id_list):
