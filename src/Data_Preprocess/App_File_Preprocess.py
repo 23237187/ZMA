@@ -53,7 +53,8 @@ class AppFilePreprocessor:
                  appID_packageName,
                  seed=False, seed_path='',
                  rec_list=False, rec_path='',
-                 mons=1):
+                 mons=1,
+                 initial_mon=3):
 
         self.cluster_appID_dict = special_app_clusters
         self.cluster_prob_dict = special_app_clusters_prob
@@ -69,6 +70,7 @@ class AppFilePreprocessor:
         self.rec_list = rec_list
         self.rec_path = rec_path
         self.mons = mons
+        self.initial_mon = initial_mon
 
         if self.seed == False :
             self.user_subset_for_specail_cluster_dict = self.generate_user_set_for_each_meaningful_cluster()
@@ -273,7 +275,8 @@ class AppFilePreprocessor:
                         ele = ele.replace("(", " ")
                         dict_ele = ele.split(",")
                         appID = self.packageName_appID_dict[dict_ele[0]]
-                        rating = int(ast.literal_eval(dict_ele[1].strip())) + 1
+                        # rating = int(ast.literal_eval(dict_ele[1].strip())) + 1
+                        rating = 10.0
                         appid_rating_list.append((appID, rating))
                     uid_appid_rating_list.append((uid, appid_rating_list))
         return uid_appid_rating_list
@@ -322,7 +325,7 @@ class AppFilePreprocessor:
                 'package_Name': app_id,
                 'day_freq_low_bound': 1,
                 'day_freq_high_bound': 6,
-                'days_prob_low_bound': 0.05,
+                'days_prob_low_bound': 0.2,
                 'days_prob_high_bound': 0.25,
                 'avg_time_mu': 5,
                 'avg_time_sigma': 2.5
@@ -357,8 +360,8 @@ class AppFilePreprocessor:
         avg_time_sigma = app_info_dict['avg_time_sigma']
         avg_time = avg_time_mu + (u_app_rating - 5) * avg_time_sigma
         # avg_time = truc_gauss(avg_time_mu, avg_time_sigma, 0, 120)
-        if avg_time <= 0.4:
-            avg_time = 0.5
+        if avg_time <= 0.4 * 60:
+            avg_time = 0.5 * 60 #单位 小时 =》 分钟
         total_time = avg_time * days_num
 
         day_freq_low_bound = app_info_dict['day_freq_low_bound']
@@ -449,13 +452,18 @@ class AppFilePreprocessor:
     def generate_mons_log_seed(self):
         month_num = self.mons
         monthNo_log_seed_list = list()
-        for cnt in range(1, month_num + 1):
+        if self.initial_mon != 3:
+            ini_cnt = 2
+        else:
+            ini_cnt = 1
+        for cnt in range(ini_cnt, month_num + 1):
             month_idx = cnt + 2
             if (cnt == 1):
                 sample_day_num = 20
+                sample_days_list = list(range(5, 26))
             else:
                 sample_day_num = list(random.sample(range(15, 21), 1))[0]
-            sample_days_list = list(random.sample(range(1, 30), sample_day_num))
+                sample_days_list = list(random.sample(range(1, 30), sample_day_num))
             log_seed_dict = self.generate_user_log_seed(sample_days_list)
             monthNo_log_seed_list.append((month_idx, log_seed_dict))
         return monthNo_log_seed_list
@@ -469,11 +477,11 @@ class AppFilePreprocessor:
         return log_seed_dict
 
 
-    def generate_start_end_timestamps(self, date, freq, time):
+    def generate_start_end_timestamps(self, mon_idx, date, freq, time):
         time_distribution_list = numpy.random.dirichlet(np.ones(freq), size=1)[0] * time * 60.0
-        start_time = int(mktime(datetime(2015, 3, date, 8, 0).timetuple()))
+        start_time = int(mktime(datetime(2015 + int(mon_idx / 12), int(mon_idx) % 12, date, 8, 0).timetuple()))
         #change needed
-        end_time = int(mktime(datetime(2015, 3, date, 23, 59).timetuple()))
+        end_time = int(mktime(datetime(2015 + int(mon_idx / 12), int(mon_idx) % 12, date, 23, 59).timetuple()))
         #change needed
         start_time_list = list(random.sample(range(start_time, end_time), freq))
         start_end_list = list()
@@ -519,7 +527,7 @@ class AppFilePreprocessor:
     def generate_log_file_for_user_date(self, user_id, mon_idx, date, app_key_behav_dict, path_prefix):
         app_key_start_end_dict = dict()
         for app_id, behav_dict in app_key_behav_dict.items():
-            start_end_list = self.generate_start_end_timestamps(date, behav_dict['freq'], behav_dict['time'])
+            start_end_list = self.generate_start_end_timestamps(mon_idx, date, behav_dict['freq'], behav_dict['time'])
             app_key_start_end_dict.update({app_id: start_end_list})
 
         record_list = list()
