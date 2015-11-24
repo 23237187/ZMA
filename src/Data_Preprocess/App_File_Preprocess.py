@@ -54,7 +54,9 @@ class AppFilePreprocessor:
                  seed=False, seed_path='',
                  rec_list=False, rec_path='',
                  mons=1,
-                 initial_mon=3):
+                 initial_mon=3,
+                 user_num=30,
+                 app_num=34):
 
         self.cluster_appID_dict = special_app_clusters
         self.cluster_prob_dict = special_app_clusters_prob
@@ -63,14 +65,15 @@ class AppFilePreprocessor:
         self.appID_packageName_dict = appID_packageName
         self.packageName_appID_dict = self.invert_appID_packageName_dict()
         # pprint.pprint(self.packageName_appID_dict)
-        self.users_list = list(range(1, 31))
-        self.apps_list = list(range(1, 35))
+        self.users_list = list(range(1, user_num + 1))
+        self.apps_list = list(range(1, app_num + 1))
         self.seed = seed
         self.seed_path = seed_path
         self.rec_list = rec_list
         self.rec_path = rec_path
         self.mons = mons
         self.initial_mon = initial_mon
+        self.user_num = user_num
 
         if self.seed == False :
             self.user_subset_for_specail_cluster_dict = self.generate_user_set_for_each_meaningful_cluster()
@@ -143,7 +146,7 @@ class AppFilePreprocessor:
         clusters_2_app_dict = self.common_appID_dict
         common_clusters_2_users_apps_map = dict()
         for cluster_name, app_list in clusters_2_app_dict.items():
-            user_list = range(1, 31)
+            user_list = range(1, self.user_num + 1)
             user_app_dict = self.map_clustered_apps_to_clustered_users_for_one_cluster(app_list, user_list,
                                                                                        map_prob_lower_bound=0.5)
             common_clusters_2_users_apps_map.update({cluster_name: user_app_dict})
@@ -470,7 +473,7 @@ class AppFilePreprocessor:
 
     def generate_user_log_seed(self, sample_days_list):
         log_seed_dict = dict()
-        for user_id in range(1, 31):
+        for user_id in range(1, self.user_num + 1):
             bundle = self.user_apps_dates_time_freq_dict(user_id, sample_days_list)
             uid_key_behv_dict = self.user_date_app_bahavior_dict(bundle)
             log_seed_dict = merge_two_dicts(log_seed_dict, uid_key_behv_dict)
@@ -479,6 +482,9 @@ class AppFilePreprocessor:
 
     def generate_start_end_timestamps(self, mon_idx, date, freq, time):
         time_distribution_list = numpy.random.dirichlet(np.ones(freq), size=1)[0] * time * 60.0
+        mon_fig = int(mon_idx % 12)
+        if (mon_fig == 0):
+            mon_fig = 12
         start_time = int(mktime(datetime(2015 + int(mon_idx / 12), int(mon_idx) % 12, date, 8, 0).timetuple()))
         #change needed
         end_time = int(mktime(datetime(2015 + int(mon_idx / 12), int(mon_idx) % 12, date, 23, 59).timetuple()))
@@ -544,7 +550,7 @@ class AppFilePreprocessor:
             axis=1)
 
         # print(record_frame)
-        month_str = str(mon_idx)
+        month_str = str(int(mon_idx / 12) + 1) + "_" + str(mon_idx)
         filename = path_prefix + '/' + month_str + '-' + str(date) + '.txt'
         record_frame.to_csv(filename, header=False, index=False)
         for line in fileinput.input(filename, inplace=True):
@@ -555,6 +561,7 @@ class AppFilePreprocessor:
         user_folder_path = path_prefix + '/' + str(user_id)
         os.makedirs(user_folder_path, exist_ok=True)
         os.chdir(user_folder_path)
+        # print("generating log for user_" + str(user_id) + "in " + str(mon_idx) + " month")
         for date, app_key_behav_dict in date_key_behav_dict.items():
             self.generate_log_file_for_user_date(user_id, mon_idx, date, app_key_behav_dict, user_folder_path)
 

@@ -1,6 +1,6 @@
 
 
-from src.Data_Preprocess.App_File_Preprocess import  *
+from App_File_Preprocess import  *
 import pprint
 
 cluster_prob_dict = {
@@ -179,7 +179,7 @@ preprocessor = AppFilePreprocessor(cluster_2_app_dict, cluster_prob_dict, common
                                     seed_path='/home/yang/Data_Test/sample_3',
                                     rec_list=False,
                                     rec_path='/home/yang/Data_Test/sample_3/miracle_rec_list/part-00000',
-                                    mons=15,
+                                    mons=11,
                                     initial_mon=3,
                                     app_num=app_num,
                                     user_num=user_num)
