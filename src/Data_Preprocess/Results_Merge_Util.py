@@ -87,6 +87,41 @@ class Results_Merge_Util:
         return df
 
     @staticmethod
+    def ratings_to_df_spark(file_path):
+        out_path = file_path + "_2"
+        with open(out_path, "w") as out_file:
+            with open(file_path, "r") as in_file:
+                out_file.write(in_file.read())
+
+        for line in fileinput.input(out_path, inplace=True):
+            print(line.replace("(", ""), end='')
+        for line in fileinput.input(out_path, inplace=True):
+            print(line.replace(")", ""), end='')
+
+        uid_appName_rating_dict = dict()
+        with open(out_path, 'r') as infile:
+            for line in infile:
+                dict_ele = line.split(sep=",")
+                uid = ast.literal_eval(dict_ele[0])
+                app_name = dict_ele[1]
+                rating = ast.literal_eval(dict_ele[2])
+                if uid not in uid_appName_rating_dict.keys():
+                    tmp = dict()
+                    tmp.setdefault(app_name, rating)
+                    uid_appName_rating_dict.setdefault(uid, tmp)
+                else:
+                    tmp = uid_appName_rating_dict.get(uid)
+                    tmp = tmp.setdefault(app_name, rating)
+                    uid_appName_rating_dict.setdefault(uid, tmp)
+
+        df = pd.DataFrame.from_dict(uid_appName_rating_dict).fillna(0)
+        df = df.T
+        df.index.name = 'usr'
+
+        print(df)
+        return df
+
+    @staticmethod
     def merge_ratings_and_recs(ratings_path, recs_path):
         ratings = Results_Merge_Util.ratings_csv_rearange(ratings_path)
         recs = Results_Merge_Util.recs_to_df(recs_path)
@@ -101,12 +136,20 @@ class Results_Merge_Util:
         sns.heatmap(fill_df)
         sns.plt.show()
 
+    # @staticmethod
+    # def ratings_demo_process(ratings_path):
+    #     df = Results_Merge_Util.ratings_csv_rearange(ratings_path)
+    #     sns.set()
+    #     sns.heatmap(df)
+    #     sns.plt.show()
+
     @staticmethod
-    def ratings_demo_process(ratings_path):
-        df = Results_Merge_Util.ratings_csv_rearange(ratings_path)
+    def ratings_demo_process(ratings_path, output_path):
+        df = Results_Merge_Util.ratings_to_df_spark(ratings_path)
         sns.set()
         sns.heatmap(df)
-        sns.plt.show()
+        sns.plt.savefig(output_path)
+
 
 
 

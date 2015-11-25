@@ -485,9 +485,9 @@ class AppFilePreprocessor:
         mon_fig = int(mon_idx % 12)
         if (mon_fig == 0):
             mon_fig = 12
-        start_time = int(mktime(datetime(2015 + int(mon_idx / 12), int(mon_idx) % 12, date, 8, 0).timetuple()))
+        start_time = int(mktime(datetime(2015 + int(mon_idx / 12), mon_fig % 12, date, 8, 0).timetuple()))
         #change needed
-        end_time = int(mktime(datetime(2015 + int(mon_idx / 12), int(mon_idx) % 12, date, 23, 59).timetuple()))
+        end_time = int(mktime(datetime(2015 + int(mon_idx / 12), mon_fig % 12, date, 23, 59).timetuple()))
         #change needed
         start_time_list = list(random.sample(range(start_time, end_time), freq))
         start_end_list = list()
