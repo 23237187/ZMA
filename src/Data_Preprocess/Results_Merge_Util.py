@@ -118,7 +118,7 @@ class Results_Merge_Util:
         df = df.T
         df.index.name = 'usr'
 
-        print(df)
+        # print(df)
         return df
 
     @staticmethod
